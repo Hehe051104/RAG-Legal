@@ -33,7 +33,7 @@ def parse_civil_code_perfect(file_path, output_json):
 
         # 优先解决最后的附则
         if re_appendix.match(text):
-            current_book = "附则"  # 将其作为顶级层级
+            current_book = "附则"  # 把附则作为编
             current_subbook = ""
             current_chapter = ""
             current_section = ""
@@ -58,7 +58,7 @@ def parse_civil_code_perfect(file_path, output_json):
             current_section = text
             continue
 
-        # 匹配“条”并构建记录
+        # 匹配“条”并构建记录 只有有条才会创建记录,略去了目录中的内容
         article_match = re_article.match(text)
         if article_match:
             article_num = article_match.group(1)
@@ -92,7 +92,7 @@ def parse_civil_code_perfect(file_path, output_json):
         json.dump(legal_records, f, ensure_ascii=False, indent=4)
 
     print(f"解析结束！共提取 {len(legal_records)} 条法律。")
-    print(f"文件已保存至：{os.path.abspath(output_json)}")
+    print(f"文件已保存至：{os.path.abspath(output_json)}")  # 输出绝对路径
 
 
 parse_civil_code_perfect("法律原文/中华人民共和国民法典_20200528.docx", "code_json/civil_code_1260.json")
