@@ -26,7 +26,7 @@ def parse_code_perfect(file_path, output_json):
     re_subbook = re.compile(r'^(第[一二三四五六七八九十百千零]+分编)[\s\u3000]+(.+)$')
     re_chapter = re.compile(r'^(第[一二三四五六七八九十百千零]+章)[\s\u3000]+(.+)$')
     re_section = re.compile(r'^(第[一二三四五六七八九十百千零]+节)[\s\u3000]+(.+)$')
-    re_article = re.compile(r'^(第[一二三四五六七八九十百千零]+条)[\s\u3000]*(.*)$')
+    re_article = re.compile(r'^(第[一二三四五六七八九十百千零]+条(?:之[一二三四五六七八九十]+)?)[\s\u3000]*(.*)$')
     re_appendix = re.compile(r'^附[\s\u3000]*则$')
 
     # 遍历段落
@@ -142,7 +142,7 @@ def parse_interpretation_perfect(file_path, output_json):
     # 匹配司法解释的大章节：一、关于一般规定 (注意那个顿号 、)
     re_chapter = re.compile(r'^([一二三四五六七八九十]+、.+)$')
     # 匹配法条：第X条 (后面允许直接跟内容或换行)
-    re_article = re.compile(r'^(第[一二三四五六七八九十百千零]+条)[\s\u3000]*(.*)$')
+    re_article = re.compile(r'^(第[一二三四五六七八九十百千零]+条(?:之[一二三四五六七八九十]+)?)[\s\u3000]*(.*)$')
 
     # 4. 遍历解析
     for para in doc.paragraphs:
@@ -190,7 +190,7 @@ def parse_interpretation_perfect(file_path, output_json):
             else:
                 legal_records[-1]["content"] = text
 
-    # 5. 创建文件夹并保存
+    # 创建文件夹并保存
     output_dir = os.path.dirname(output_json)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
