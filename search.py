@@ -64,17 +64,18 @@ def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
 
                 is_match = True
                 if law_name_query:
-                    # 依然砍掉“(一)”等后缀
+                    # 1. 依然先砍掉“(一)”等后缀，拿到标准核心名
                     query_core = re.split(r'[_\\s\\u3000（(]', law_name_query)[0].strip()
 
-                    #  允许包含匹配（"刑法" 能命中 "中华人民共和国刑法"）
+                    # 2. 只有“互相包含”才有进一步谈的资格
                     if query_core in db_source or db_source in query_core:
-                        # 2防御寄生虫：防止 "民法典" 错误命中 "民法典解释"
-                        is_db_interp = "解释" in db_source or "规定" in db_source
-                        is_query_interp = "解释" in query_core or "规定" in query_core
+                        # 3. 【核心修复】：身份必须完全对等
+                        # 判断数据库里的和查询词里的，是否【都包含】或者【都不包含】“解释/规定”
+                        db_is_interp = any(kw in db_source for kw in ["解释", "规定"])
+                        query_is_interp = any(kw in query_core for kw in ["解释", "规定"])
 
-                        # 如果数据库是司法解释，但用户查询没带"解释/规定"，直接拒绝！
-                        if is_db_interp and not is_query_interp:
+                        # 如果一个是解释，另一个不是，直接判定为“跨界误触”，强制拦截！
+                        if db_is_interp != query_is_interp:
                             is_match = False
                     else:
                         is_match = False # 完全不包含，直接拒绝
