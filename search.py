@@ -1,6 +1,7 @@
 import torch
 import chromadb
 from sentence_transformers import SentenceTransformer
+import re
 
 # db_path = "./legal_vector_db"
 # collection_name = "china_civil_code"
@@ -32,55 +33,70 @@ def get_resources(db_path, model_name):
 
     return _chroma_client, _embedding_model_instance
 
-def run_search(query_text,db_path,collection_name,model_name,n_results):
-    client, model = get_resources(db_path, model_name)
 
+def run_search(query_text, db_path, collection_name, model_name, n_results):
+    client, model = get_resources(db_path, model_name)
     collection = client.get_collection(name=collection_name)
 
-
-    print(f"\n用户咨询: {query_text}")
+    print(f"\n 大模型重写指令: {query_text}")
     print("正在检索法律依据\n")
 
-    # 核心：使用 query 专门的 Prompt 进行编码
-    # 先把要查询句子句子转成向量
-    query_embedding = model.encode(
-        [query_text],
-        prompt_name="query",
-        convert_to_numpy=True
-    ).tolist()
+    final_raw_docs = []
+    seen_keys = set() # 用于去重
 
-    #  执行检索 (取前 n_results 条最相关的)
-    results = collection.query(
-        query_embeddings=query_embedding,
-        n_results=n_results,
-        # where={"book": "第二编　物　　权"}  # 筛选条件
-    )
+    # 标签拦截
+    tags = re.findall(r'【(.*?)】', query_text)
 
-    #  打印结果
-    # results包含documents,metadatas,ids,distances  embeddings 默认是不返回的
-    # [0]的原因是支持一下多查询,可能里面会有多个数据
-    for i in range(len(results['documents'][0])):
-        doc = results['documents'][0][i]
-        meta = results['metadatas'][0][i]
-        score = results['distances'][0][i] # 距离越小越相关
+    for tag in tags:
+        parts = tag.split('-')
+        law_name = parts[0] if len(parts) > 1 and parts[0] != "未知" else None
+        article_num = parts[-1]
 
-        levels = [
-            meta.get("book", ""),
-            meta.get("subbook", ""),
-            meta.get("chapter", ""),
-            meta.get("section", "")
-        ]
-        full_path = " > ".join([lvl for lvl in levels if lvl])
+        # 构造过滤条件
+        where_cond = {"article_number": article_num}
+        print(f" [精准拦截触发] 尝试直接提取数据库：{tag}")
+        res = collection.get(where=where_cond)
 
-        print(f"【匹配条文 {i+1}】")
-        print(f"来源：{meta['source']}")
-        print(f"法条编号：{meta['article_number']}")
-        print(f"法律层级：{full_path}")
-        print(f"法律原文：{doc}")
-        print(f"语义距离：{score:.4f}")
-        print("-" * 60)
+        if res['documents']:
+            for d, m in zip(res['documents'], res['metadatas']):
+                # Python 级别比对：如果标签里有法律名，判断它是否在数据库的 source 里
+                if law_name and law_name not in m.get('source', ''):
+                    continue # 名字对不上，跳过！
 
-    return results
+                key = f"{m['source']}_{m['article_number']}"
+                if key not in seen_keys:
+                    #  新增 "method": 怎么找来的
+                    final_raw_docs.append({"content": d, "metadata": m, "method": "精准点名"})
+                    seen_keys.add(key)
+                    print(f"[精准命中]：{m['source']} {m['article_number']}")
+                    print(f"内容预览: {d[:60]}...")
+
+        else:
+            print(f"数据库中未找到确切对应的法条：{tag}")
+
+    # 纯向量检索
+    pure_semantic_query = re.sub(r'【.*?】', '', query_text).strip()
+
+    if pure_semantic_query:
+        print(f" [向量检索启动] 语义关键词: {pure_semantic_query}")
+        query_embedding = model.encode([pure_semantic_query], prompt_name="query", convert_to_numpy=True).tolist()
+        vector_results = collection.query(query_embeddings=query_embedding, n_results=n_results)
+
+        for i in range(len(vector_results['documents'][0])):
+            d = vector_results['documents'][0][i]
+            m = vector_results['metadatas'][0][i]
+            key = f"{m['source']}_{m['article_number']}"
+
+            if key not in seen_keys:
+                #  新增 "method": "向量召回"
+                final_raw_docs.append({"content": d, "metadata": m, "method": "向量召回"})
+                seen_keys.add(key)
+
+    # 简单打印一下收集到的总数
+    print(f"\n 检索完毕，共收集到 {len(final_raw_docs)} 条候选法条进入重排阶段。")
+    print("-" * 60)
+
+    return final_raw_docs
 
 """ 
 results结构

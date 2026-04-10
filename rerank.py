@@ -33,9 +33,12 @@ def rerank_context(query, raw_docs, model_name ,max_length,top_n=3, threshold=-5
     # 模型打分
     scores = rerank_model.predict(input_pairs)
 
-    # 将分数写回结果中并排序
+    # 并给 VIP 发免死金牌 ,rerank不会将其删掉
     for i in range(len(raw_docs)):
-        raw_docs[i]['rerank_score'] = float(scores[i])
+        if raw_docs[i].get('method') == '精准点名':
+            raw_docs[i]['rerank_score'] = 999.0  # 强行拉满分数！
+        else:
+            raw_docs[i]['rerank_score'] = float(scores[i])
 
     # 按 Rerank 分数从高到低排序
     sorted_results = sorted(raw_docs, key=lambda x: x['rerank_score'], reverse=True)
@@ -48,11 +51,13 @@ def rerank_context(query, raw_docs, model_name ,max_length,top_n=3, threshold=-5
         score = res.get('rerank_score', 0)
         source = res['metadata'].get('source', '未知来源')
         article = res['metadata'].get('article_number', '未知编号')
-        content = res['content'].replace('\n', ' ') # 压缩一下换行，方便预览
+        content = res['content'].replace('\n', ' ')
+        method = res.get('method', '未知方式') #  提取在 search 里打的标签
 
-        print(f"【排名 {i+1}】  Rerank得分: {score:.4f}")
+
+        print(f"【排名 {i+1}】 Rerank得分: {score:.4f}  |  召回方式: [{method}]")
         print(f" 来源: {source} | 编号: {article}")
-        print(f" 内容: {content}...")
+        print(f" 预览: {content[:80]}...") # 限制输出80个字
         print("-" * 60)
 
     return final_results

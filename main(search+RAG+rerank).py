@@ -23,7 +23,7 @@ def main():
         user_input = input("\n请输入您的问题:...(q,quit,exit退出.. )\n")
         if user_input.lower() in ['q', 'quit', 'exit']: break
 
-        #  重写请求：将模糊的“上面聊了什么”转为“总结对话” 不然bug会是搜索'上面聊了什么'
+        # 重写请求：将模糊的“上面聊了什么”转为“总结对话” 不然bug会是搜索'上面聊了什么'
         search_query = rewrite_query(user_input, history,rag_model_name)
 
         # 意图预判：如果是询问记忆或闲聊，直接跳过检索
@@ -34,31 +34,24 @@ def main():
         formatted_docs = []
 
         if not should_skip_search:
-            # 检索
-            results = run_search(search_query,db_path,collection_name,search_model_name,n_results)
+            # 检索 (现在返回的是现成的列表格式)
+            raw_docs = run_search(search_query, db_path, collection_name, search_model_name, n_results)
 
-            # 优化前只有search的逻辑
-            # # 距离太远，则不传给模型
-            # if results and 'distances' in results and results['distances'][0][0] < distance_threshold:   # 第一个最小的都不行那就都不做了
-            #     for i in range(len(results['documents'][0])):
-            #         if results['distances'][0][i] < 1.1:
-            #             formatted_docs.append({
-            #                 "content": results['documents'][0][i],
-            #                 "metadata": results['metadatas'][0][i]
-            #             })
-            # else:
-            #     print("本地法律库未匹配到高相关条文，将由模型尝试回答。")
-
-            if results and results['documents'] and len(results['documents'][0]) > 0:
-                # 使用 zip 优雅地解包
-                raw_docs = [{"content": d, "metadata": m} for d, m  in zip(results['documents'][0], results['metadatas'][0])]
-
-                # 喂给重排序函数
+            if raw_docs:
+                # 直接喂给重排序函数
                 final_results = rerank_context(search_query, raw_docs, rerank_model_name, max_length, top_n, threshold)
-                formatted_docs = final_results
 
-        else:
-            print("识别为对话回顾请求，跳过数据库检索。")
+                print("\n" + " [透明测试] 最终塞给大模型的弹药库 " )
+                if not final_results:
+                    print(" 警告：重排后所有法条均被低分过滤，大模型将仅靠自身记忆回答。")
+                else:
+                    for i, doc in enumerate(final_results):
+                        print(f"  弹药 {i+1}: {doc['metadata']['source']} - {doc['metadata']['article_number']}")
+                print("="*68 + "\n")
+
+                formatted_docs = final_results
+            else:
+                print("本地法律库未匹配到相关条文，将由模型尝试回答。")
 
         # 生成回答：传入过滤后的文档和历史记录
         # 如果 formatted_docs 为空，Qwen 就会根据 Prompt 里的要求，只看 history 回答

@@ -1,21 +1,25 @@
 import requests
 
-def rewrite_query(user_query, history,model_name):
+def rewrite_query(user_query, history, model_name):
     print("\n正在分析用户意图并重写查询...")
-
-    """
-    让模型判断：这是个新问题，还是对老问题的追问？并重写成适合搜索的关键词。
-    """
     if not history:
-        return user_query
+        history_str = "无"
+    else:
+        history_str = "\n".join([f"用户: {h['user']}\n助手: {h['bot']}" for h in history[-2:]])
 
-    # 简化的历史记录展示
-    history_str = "\n".join([f"用户: {h['user']}\n助手: {h['bot']}" for h in history[-2:]])
+    # --- 核心改动：强化 Prompt 的结构化输出能力 ---
+    prompt = f"""你是一个专业的法律咨询意图解析器。请结合【对话历史】，将用户的【最新提问】改写为一个独立的搜索语句。
 
-    prompt = f"""你是一个法律咨询意图解析器。请结合【对话历史】，将用户的【最新提问】改写为一个独立的搜索语句。
-    如果用户是在闲聊或询问记忆（如“你还记得吗”），请将其重写为“请总结并确认之前的咨询内容”。
-    如果提问涉及新的法律名词，即便之前在聊别的，也要将其重写为该名词的完整法律咨询意图。
-    如果用户是追问，请补全追问中的主语和背景。
+    【核心任务要求】：
+    1. 提取法条标签：如果用户在提问中提到了具体的法律名称和条文编号（如“民法典第一千多条”、“刑法第232条”），请务必在输出最前面用标签标出，格式严格为：【法律名-第xxx条】。
+       - 注意：数字必须转换为中文大写（如：1064 转为 第一千零六十四）。
+       - 如果用户没说哪部法律，只说了条数，格式为：【未知-第xxx条】。
+    2. 语义重写：在标签之后，去除口语化废话，提炼出专业的法律搜索关键词。
+    3. 特殊意图：如果是闲聊或询问记忆，重写为“请总结并确认之前的咨询内容”。
+
+    【示例】：
+    输入：我记得民法典一千多条讲过两口子欠钱那个。
+    输出：【中华人民共和国民法典-第一千零六十四条】 夫妻共同债务的认定与承担
 
     【对话历史】：
     {history_str}
@@ -23,10 +27,11 @@ def rewrite_query(user_query, history,model_name):
     【最新提问】：
     {user_query}
 
-    请直接输出改写后的搜索语句："""
+    请直接输出改写后的结果："""
 
     payload = {"model": model_name, "prompt": prompt, "stream": False}
     try:
+        import requests
         response = requests.post("http://localhost:11434/api/generate", json=payload)
         return response.json().get("response", user_query).strip()
     except:
