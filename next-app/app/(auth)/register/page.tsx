@@ -19,7 +19,8 @@ export default function Page() {
     { status: "idle" }
   );
 
-  const { update: updateSession } = useSession();
+  const session = useSession();
+  const updateSession = session?.update;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function Page() {
     } else if (state.status === "success") {
       toast({ type: "success", description: "Account created!" });
       setIsSuccessful(true);
-      updateSession();
+      updateSession?.();
       router.refresh();
     }
   }, [state.status]);
