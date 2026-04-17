@@ -3,6 +3,8 @@ import { auth } from "@/app/(auth)/auth";
 import { getChatById, getVotesByChatId, voteMessage } from "@/lib/db/queries";
 import { ChatbotError } from "@/lib/errors";
 
+export const runtime = "edge";
+
 const voteSchema = z.object({
   chatId: z.string(),
   messageId: z.string(),

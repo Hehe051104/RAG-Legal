@@ -45,6 +45,8 @@ import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
+export const runtime = "edge";
+
 export const maxDuration = 60;
 
 function getStreamContext() {

@@ -9,6 +9,8 @@ import {
 } from "@/lib/db/queries";
 import { ChatbotError } from "@/lib/errors";
 
+export const runtime = "edge";
+
 const documentSchema = z.object({
   content: z.string(),
   title: z.string(),

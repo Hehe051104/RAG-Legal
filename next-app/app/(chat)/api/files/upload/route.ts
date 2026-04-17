@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { auth } from "@/app/(auth)/auth";
 
+export const runtime = "edge";
+
 const FileSchema = z.object({
   file: z
     .instanceof(Blob)
