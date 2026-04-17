@@ -2,8 +2,8 @@ export const runtime = 'edge';
 
 import { type NextRequest, NextResponse } from "next/server";
 
-// Frontend-only mode: disable auth/database middleware behaviors.
-export async function proxy(_request: NextRequest) {
+// 这里的函数名必须从 proxy 改为 middleware
+export async function middleware(_request: NextRequest) {
   return NextResponse.next();
 }
 
@@ -14,7 +14,6 @@ export const config = {
     "/api/:path*",
     "/login",
     "/register",
-
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
