@@ -1,10 +1,11 @@
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
+
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { auth } from "@/app/(auth)/auth";
-
-export const runtime = "edge";
 
 const FileSchema = z.object({
   file: z

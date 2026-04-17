@@ -1,6 +1,7 @@
-import { getAllGatewayModels, getCapabilities, isDemo } from "@/lib/ai/models";
-
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
+
+import { getAllGatewayModels, getCapabilities, isDemo } from "@/lib/ai/models";
 
 export async function GET() {
   const headers = {
