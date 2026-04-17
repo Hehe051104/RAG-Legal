@@ -15,7 +15,11 @@ from RAG import rewrite_query, call_ollama_rag
 app = FastAPI(
     title="法律大模型智能体 API",
     description="提供给前端调用的标准 RESTful 接口，支持自定义检索参数。",
-    version="1.0.0"
+    version="1.0.0",
+    servers=[ # 不加这段会认为网页在哪,api在哪 会去手机的8000端口
+        {"url": "https://api.hehe051104.me", "description": "公网生产环境"},
+        {"url": "http://127.0.0.1:8000", "description": "本地开发环境"}
+    ]
 )
 
 app.add_middleware(
