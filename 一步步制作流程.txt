@@ -60,3 +60,19 @@ api 文件夹里的代码把你的问题“打包”，转发给 api.hehe051104.
 Python 后端算出答案 -> 给 api 路由 -> api 路由给前端 -> 你在屏幕上看到答案。
 
 23.前端部署到cf上,npm切换到pnpm  并且为适配cf,将原生Node.js切换为Edge,只保留核心,并得益于全球结点,可以加快打开
+
+24.开始实现邮箱注册
+database.py：异步 DB 引擎与会话管理
+
+models.py：
+User（UUID 主键、email 唯一、password_hash 可空、provider 默认 local、google_id 可空唯一、is_verified 等）
+VerificationCode（邮箱、6位验证码、10分钟过期时间）
+
+utils.py：密码哈希/校验 + 异步邮件发送
+
+auth.py：
+send-code：生成验证码、写库、发邮件
+register：校验验证码和过期、创建/更新用户并置 is_verified=True
+
+api_server.py：已接入路由与建表初始化
+

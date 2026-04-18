@@ -6,3 +6,8 @@ python-docx
 fastapi
 pydantic
 uvicorn
+sqlalchemy>=2.0
+aiosqlite
+passlib[bcrypt]
+pydantic-settings
+email-validator
