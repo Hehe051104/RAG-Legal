@@ -33,7 +33,12 @@ const completeLogin = (
     type: "success",
     description: response.msg || "登录成功",
   });
-  router.push(role === "admin" ? "/admin" : "/legal-assistant");
+  console.log("Login success, navigating...", {
+    provider: "password-or-google",
+    role,
+    target: role === "admin" ? "/admin" : "/legal-assistant",
+  });
+  router.replace(role === "admin" ? "/admin" : "/legal-assistant");
 };
 
 export default function LoginPage() {
