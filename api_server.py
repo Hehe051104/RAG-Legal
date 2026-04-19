@@ -406,9 +406,10 @@ async def chat_endpoint(req: ChatRequest):
 
 required_origins = [
     "https://rag-legal.pages.dev",
-    "https://register.rag-legal.pages.dev",  # 组长，一定要把预览网址加在这里！
+    "https://register.rag-legal.pages.dev",
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://rag-legal-jet.vercel.app"
 ]
 
 extra_origins = [
