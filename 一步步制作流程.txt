@@ -85,3 +85,5 @@ gmail发送需要全局代理,麻烦  所以换成qqmail,更改协议和端口
 
 27.修复重名函数，全面转向vercel
 cf对于动态逻辑只给3MB，不够用，但是vercel每个函数可给50MB，并支持原生NODE
+
+换个新域名一定要在api_server的required_origins这添加😭😭😭
