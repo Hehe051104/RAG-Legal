@@ -1,7 +1,13 @@
 from contextlib import asynccontextmanager
+import asyncio
+from datetime import datetime, timedelta, timezone
+import os
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+from jose import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 import uvicorn
@@ -13,7 +19,65 @@ from search import run_search
 from rerank import rerank_context
 from RAG import rewrite_query, call_ollama_rag
 from database import init_db
-from routers.auth import router as auth_router
+from routers.auth import (
+    AuthError,
+    JWT_EXPIRE_MINUTES,
+    decode_access_token,
+    router as auth_router,
+)
+
+
+ONLINE_TTL_SECONDS = int(os.getenv("ONLINE_TTL_SECONDS", "75"))
+online_users_last_seen: dict[str, datetime] = {}
+online_users_profile: dict[str, dict[str, str | None]] = {}
+online_users_lock = asyncio.Lock()
+
+
+def _normalize_validation_field(loc: tuple[object, ...] | list[object] | None) -> str:
+    if not loc:
+        return "参数"
+
+    field_alias = {
+        "full_name": "全名",
+        "email": "邮箱",
+        "password": "密码",
+        "new_password": "新密码",
+        "code": "验证码",
+    }
+
+    parts: list[str] = []
+    for item in loc:
+        if isinstance(item, str) and item not in {"body", "query", "path", "header"}:
+            parts.append(field_alias.get(item, item))
+
+    return ".".join(parts) if parts else "参数"
+
+
+def _translate_validation_error(error: dict[str, object]) -> str:
+    error_type = str(error.get("type") or "")
+    loc = error.get("loc")
+    field_name = _normalize_validation_field(loc if isinstance(loc, (tuple, list)) else None)
+    ctx = error.get("ctx") if isinstance(error.get("ctx"), dict) else {}
+
+    if error_type == "string_too_short":
+        min_length = int(ctx.get("min_length") or 0)
+        if min_length > 0:
+            return f"{field_name}至少需要 {min_length} 个字符"
+        return f"{field_name}长度太短"
+
+    if error_type == "string_too_long":
+        max_length = int(ctx.get("max_length") or 0)
+        if max_length > 0:
+            return f"{field_name}最多支持 {max_length} 个字符"
+        return f"{field_name}长度过长"
+
+    if error_type == "missing":
+        return f"缺少必填字段：{field_name}"
+
+    if error_type == "value_error":
+        return f"{field_name}格式不正确"
+
+    return f"{field_name}参数校验失败"
 
 
 @asynccontextmanager
@@ -35,13 +99,222 @@ app = FastAPI(
 
 app.include_router(auth_router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 允许所有前端域名访问（开发阶段极其方便）
-    allow_credentials=True,
-    allow_methods=["*"],  # 允许 POST, GET 等所有请求
-    allow_headers=["*"],  # 允许所有请求头
-)
+
+
+def _extract_token_from_request(request: Request) -> str | None:
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            return token
+
+    cookie_names = ("legal_auth_token", "access_token", "token")
+    for cookie_name in cookie_names:
+        token = (request.cookies.get(cookie_name) or "").strip()
+        if token:
+            return token
+
+    return None
+
+
+def _build_user_profile_from_payload(token_payload: dict[str, object]) -> dict[str, str | None]:
+    email = str(token_payload.get("email") or "").strip() or None
+    role = str(token_payload.get("role") or "user")
+    user_id = str(token_payload.get("sub") or "").strip() or None
+    name_from_payload = str(token_payload.get("name") or "").strip()
+
+    if name_from_payload:
+        display_name = name_from_payload
+    elif email and "@" in email:
+        display_name = email.split("@", 1)[0]
+    else:
+        display_name = "User"
+
+    return {
+        "id": user_id,
+        "name": display_name,
+        "email": email,
+        "role": role,
+    }
+
+
+def _prune_expired_online_users(now: datetime) -> None:
+    expired_ids = [
+        user_id
+        for user_id, last_seen in online_users_last_seen.items()
+        if (now - last_seen).total_seconds() > ONLINE_TTL_SECONDS
+    ]
+
+    for user_id in expired_ids:
+        online_users_last_seen.pop(user_id, None)
+        online_users_profile.pop(user_id, None)
+
+
+async def _refresh_presence_from_request(request: Request) -> dict[str, object]:
+    token = _extract_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    token_payload = decode_access_token(token)
+    profile = _build_user_profile_from_payload(token_payload)
+    user_id = profile.get("id")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="JWT payload missing subject")
+
+    now = datetime.now(timezone.utc)
+
+    async with online_users_lock:
+        _prune_expired_online_users(now)
+        online_users_last_seen[user_id] = now
+        online_users_profile[user_id] = profile
+        online_count = len(online_users_last_seen)
+
+    return {
+        "status": "success",
+        "data": {
+            "online_count": online_count,
+            "user": profile,
+            "ttl_seconds": ONLINE_TTL_SECONDS,
+        },
+        "msg": "presence updated",
+    }
+
+
+@app.get("/api/auth/session")
+async def get_auth_session(request: Request):
+    token = _extract_token_from_request(request)
+
+    if not token:
+        return {"user": None}
+
+    token_payload = decode_access_token(token)
+    profile = _build_user_profile_from_payload(token_payload)
+
+    expires = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+
+    return {
+        "user": {
+            "id": profile.get("id"),
+            "name": profile.get("name"),
+            "email": profile.get("email"),
+            "role": profile.get("role"),
+        },
+        "expires": expires.isoformat(),
+    }
+
+
+@app.post("/api/presence/heartbeat")
+async def presence_heartbeat(request: Request):
+    return await _refresh_presence_from_request(request)
+
+
+@app.get("/api/presence/online-count")
+async def presence_online_count():
+    now = datetime.now(timezone.utc)
+    async with online_users_lock:
+        _prune_expired_online_users(now)
+        count = len(online_users_last_seen)
+
+    return {
+        "status": "success",
+        "data": {"online_count": count, "ttl_seconds": ONLINE_TTL_SECONDS},
+        "msg": "ok",
+    }
+
+
+@app.post("/api/presence/offline")
+async def presence_offline(request: Request):
+    token = _extract_token_from_request(request)
+    if not token:
+        return {"status": "success", "data": {"online_count": 0}, "msg": "no session"}
+
+    try:
+        token_payload = decode_access_token(token)
+    except Exception:
+        return {"status": "success", "data": {"online_count": 0}, "msg": "token invalid"}
+
+    user_id = str(token_payload.get("sub") or "").strip()
+    now = datetime.now(timezone.utc)
+
+    async with online_users_lock:
+        _prune_expired_online_users(now)
+        if user_id:
+            online_users_last_seen.pop(user_id, None)
+            online_users_profile.pop(user_id, None)
+        count = len(online_users_last_seen)
+
+    return {
+        "status": "success",
+        "data": {"online_count": count},
+        "msg": "offline marked",
+    }
+
+
+@app.exception_handler(AuthError)
+async def handle_auth_error(_request: Request, exc: AuthError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"status": "error", "data": None, "msg": exc.msg},
+    )
+
+
+@app.exception_handler(ExpiredSignatureError)
+async def handle_jwt_expired(_request: Request, _exc: ExpiredSignatureError):
+    return JSONResponse(
+        status_code=401,
+        content={"status": "error", "data": None, "msg": "JWT 已过期"},
+    )
+
+
+@app.exception_handler(JWTError)
+async def handle_jwt_error(_request: Request, _exc: JWTError):
+    return JSONResponse(
+        status_code=401,
+        content={"status": "error", "data": None, "msg": "JWT 无效"},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_validation_error(_request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    localized_errors: list[dict[str, object]] = []
+    translated_errors: list[str] = []
+
+    for error in errors:
+        translated_message = _translate_validation_error(error)
+        translated_errors.append(translated_message)
+        localized_error = dict(error)
+        localized_error["msg_en"] = str(error.get("msg") or "")
+        localized_error["msg"] = translated_message
+        localized_errors.append(localized_error)
+
+    message = translated_errors[0] if translated_errors else "请求参数校验失败"
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "status": "error",
+            "data": {"errors": localized_errors},
+            "msg": message,
+        },
+    )
+
+
+@app.exception_handler(HTTPException)
+async def handle_http_exception(_request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"status": "error", "data": None, "msg": str(exc.detail)},
+    )
+
+
+@app.exception_handler(Exception)
+async def handle_unknown_exception(_request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"status": "error", "data": None, "msg": str(exc)},
+    )
 
 # ==========================================
 # 定义前端传过来的数据格式 (数据校验层)
@@ -128,6 +401,33 @@ async def chat_endpoint(req: ChatRequest):
     except Exception as e:
         print(f"❌ [API运行错误]: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+required_origins = [
+    "https://rag-legal.pages.dev",
+    "https://register.rag-legal.pages.dev",  # 组长，一定要把预览网址加在这里！
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
+
+extra_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+# 合并名单
+allowed_origins = required_origins + extra_origins
+
+# 官方推荐的 CORS 终极解法
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,     # 允许前端携带 Cookie (认证必须)
+    allow_methods=["*"],        # 允许所有方法 (自动完美处理 OPTIONS)
+    allow_headers=["*"],        # 允许所有请求头
+)
 
 if __name__ == "__main__":
     # 启动服务器，对外暴露 8000 端口

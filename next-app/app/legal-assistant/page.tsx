@@ -15,6 +15,12 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { getApiUrl } from "@/lib/api-url";
+import {
+  type StoredAuthSession,
+  clearAuthSession,
+  getStoredAuthSession,
+  validateStoredAuthSession,
+} from "@/lib/auth/session-client";
 import { cn } from "@/lib/utils";
 
 type ChatRole = "user" | "assistant";
@@ -175,14 +181,34 @@ export default function LegalAssistantPage() {
   const [isSending, setIsSending] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [currentSession, setCurrentSession] = useState<StoredAuthSession | null>(null);
+  const [onlineCount, setOnlineCount] = useState(0);
   const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const sessionValue = sessionStorage.getItem("legal_auth_session");
-    const localValue = localStorage.getItem("legal_auth_session");
-    if (!sessionValue && !localValue) {
-      router.replace("/login");
-    }
+    let isMounted = true;
+
+    const runAuthCheck = async () => {
+      const result = await validateStoredAuthSession();
+      if (!isMounted) {
+        return;
+      }
+
+      if (!result.ok) {
+        router.replace("/login");
+        return;
+      }
+
+      setCurrentSession(result.session);
+      setAuthChecking(false);
+    };
+
+    void runAuthCheck();
+
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
   useEffect(() => {
@@ -193,10 +219,86 @@ export default function LegalAssistantPage() {
 
   const canSend = input.trim().length > 0 && !isSending;
 
+  useEffect(() => {
+    if (!currentSession?.accessToken) {
+      setOnlineCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    const requestOnlineCount = async () => {
+      try {
+        const response = await fetch(getApiUrl("/api/presence/heartbeat"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentSession.accessToken}`,
+          },
+          credentials: "include",
+          body: "{}",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          data?: { online_count?: number };
+        };
+
+        if (!cancelled) {
+          setOnlineCount(Number(payload?.data?.online_count ?? 0));
+        }
+      } catch {
+        // 忽略心跳失败，避免影响主聊天流程
+      }
+    };
+
+    const markOffline = () => {
+      void fetch(getApiUrl("/api/presence/offline"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentSession.accessToken}`,
+        },
+        credentials: "include",
+        body: "{}",
+        keepalive: true,
+      }).catch(() => {
+        // ignore
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        markOffline();
+      } else {
+        void requestOnlineCount();
+      }
+    };
+
+    const interval = window.setInterval(() => {
+      void requestOnlineCount();
+    }, 25_000);
+
+    window.addEventListener("beforeunload", markOffline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    void requestOnlineCount();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.removeEventListener("beforeunload", markOffline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      markOffline();
+    };
+  }, [currentSession?.accessToken]);
+
   const stats = useMemo(() => {
-    const userCount = messages.filter((item) => item.role === "user").length;
-    const assistantCount = messages.filter((item) => item.role === "assistant").length;
-    return { userCount, assistantCount };
+    const questionCount = messages.filter((item) => item.role === "user").length;
+    const replyCount = messages.filter((item) => item.role === "assistant").length;
+    return { questionCount, replyCount };
   }, [messages]);
 
   const addUserMessage = async (question: string) => {
@@ -221,10 +323,15 @@ export default function LegalAssistantPage() {
     setIsSending(true);
 
     try {
+      const session = getStoredAuthSession();
+
       const response = await fetch(getApiUrl("/api/chat"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(session?.accessToken
+            ? { Authorization: `Bearer ${session.accessToken}` }
+            : {}),
         },
         credentials: "include",
         body: JSON.stringify({
@@ -289,10 +396,17 @@ export default function LegalAssistantPage() {
   };
 
   const logout = () => {
-    localStorage.removeItem("legal_auth_session");
-    sessionStorage.removeItem("legal_auth_session");
+    clearAuthSession();
     router.replace("/login");
   };
+
+  if (authChecking) {
+    return (
+      <div className="flex h-dvh w-full items-center justify-center bg-background text-sm text-muted-foreground">
+        正在校验登录状态...
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh w-full flex-row overflow-hidden bg-sidebar">
@@ -351,8 +465,9 @@ export default function LegalAssistantPage() {
           </div>
           <span className="text-[13px] text-muted-foreground">智能法律问答</span>
           <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-            <span>用户: {stats.userCount}</span>
-            <span>助手: {stats.assistantCount}</span>
+            <span>在线用户: {onlineCount}</span>
+            <span>提问: {stats.questionCount}</span>
+            <span>回复: {stats.replyCount}</span>
             <Link href="/login" className="underline-offset-4 hover:underline">
               切换账号
             </Link>
