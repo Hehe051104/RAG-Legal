@@ -28,7 +28,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { createHighlighter } from "shiki";
 
 // Shiki uses bitflags for font styles: 1=italic, 2=bold, 4=underline
 // biome-ignore lint/suspicious/noBitwiseOperators: shiki bitflag check
@@ -126,6 +125,16 @@ const highlighterCache = new Map<
   Promise<HighlighterGeneric<BundledLanguage, BundledTheme>>
 >();
 
+let shikiModulePromise: Promise<typeof import("shiki")> | null = null;
+
+function loadShikiModule() {
+  if (!shikiModulePromise) {
+    shikiModulePromise = import("shiki");
+  }
+
+  return shikiModulePromise;
+}
+
 // Token cache
 const tokensCache = new Map<string, TokenizedCode>();
 
@@ -146,10 +155,12 @@ const getHighlighter = (
     return cached;
   }
 
-  const highlighterPromise = createHighlighter({
-    langs: [language],
-    themes: ["github-light", "github-dark"],
-  });
+  const highlighterPromise = loadShikiModule().then(({ createHighlighter }) =>
+    createHighlighter({
+      langs: [language],
+      themes: ["github-light", "github-dark"],
+    })
+  );
 
   highlighterCache.set(language, highlighterPromise);
   return highlighterPromise;
@@ -388,10 +399,8 @@ export const CodeBlockContent = ({
   // Memoized raw tokens for immediate display
   const rawTokens = useMemo(() => createRawTokens(code), [code]);
 
-  // Try to get cached result synchronously, otherwise use raw tokens
-  const [tokenized, setTokenized] = useState<TokenizedCode>(
-    () => highlightCode(code, language) ?? rawTokens
-  );
+  // Start with raw tokens; async highlighting is kicked off inside useEffect.
+  const [tokenized, setTokenized] = useState<TokenizedCode>(rawTokens);
 
   useEffect(() => {
     let cancelled = false;
