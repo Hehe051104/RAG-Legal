@@ -1,5 +1,3 @@
-export const runtime = 'experimental-edge';
-
 import { type NextRequest, NextResponse } from "next/server";
 
 // 这里的函数名必须从 proxy 改为 middleware

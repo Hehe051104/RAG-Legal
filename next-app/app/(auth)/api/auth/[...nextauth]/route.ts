@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 export const dynamic = "force-dynamic";
 
 const REQUEST_HOP_BY_HOP_HEADERS = new Set([
