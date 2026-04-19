@@ -5,7 +5,7 @@ import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from jose import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
@@ -86,6 +86,7 @@ app = FastAPI(
     lifespan=lifespan,
     servers=[ # 不加这段会认为网页在哪,api在哪 会去手机的8000端口
         {"url": "https://api.hehe051104.me", "description": "公网生产环境"},
+        {"url": "https://register.rag-legal.pages.dev", "description": "固定的分支预览环境（把 register 换成你的实际分支名）"},
         {"url": "http://127.0.0.1:8000", "description": "本地开发环境"}
     ]
 )
@@ -95,9 +96,30 @@ app.include_router(auth_router)
 
 @app.middleware("http")
 async def skip_body_parse_for_options(request: Request, call_next):
-    # 预检请求绝不做 Body 解析，直接放行给后续中间件/路由。
+    # 预检请求绝不做 Body 解析，直接返回 200 + CORS 响应头，避免被其它逻辑拦截成 400。
     if request.method.upper() == "OPTIONS":
-        return await call_next(request)
+        origin = (request.headers.get("origin") or "").strip()
+        req_headers = (
+            request.headers.get("access-control-request-headers")
+            or "Authorization,Content-Type"
+        )
+        req_method = (
+            request.headers.get("access-control-request-method")
+            or "GET,POST,PUT,DELETE,OPTIONS"
+        )
+
+        response = Response(status_code=200)
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+        else:
+            response.headers["Access-Control-Allow-Origin"] = "*"
+
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = req_method
+        response.headers["Access-Control-Allow-Headers"] = req_headers
+        response.headers["Access-Control-Max-Age"] = "86400"
+        return response
 
     return await call_next(request)
 
