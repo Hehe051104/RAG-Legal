@@ -90,24 +90,28 @@ app = FastAPI(
     ]
 )
 
-app.include_router(auth_router)
+required_origins = {
+    "https://rag-legal.pages.dev",
+    "http://localhost:3000",
+}
 
-allowed_origins = [
+extra_origins = {
     origin.strip()
-    for origin in os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://rag-legal.pages.dev,https://www.rag-legal.pages.dev",
-    ).split(",")
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
     if origin.strip()
-]
+}
+
+allowed_origins = sorted(required_origins | extra_origins)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+app.include_router(auth_router)
 
 
 def _extract_token_from_request(request: Request) -> str | None:
