@@ -94,6 +94,7 @@ async function requestJson<TResponse>(path: string, init: RequestInit): Promise<
   try {
     response = await fetch(getApiUrl(path), {
       ...init,
+      credentials: "include",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",

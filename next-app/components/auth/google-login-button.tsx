@@ -74,6 +74,11 @@ export function GoogleLoginButton({
         setIsLoading(true);
         const response = await googleLogin({ credential });
         if (!cancelled) {
+          console.log("Login success, navigating...", {
+            provider: "google",
+            status: response.status,
+            hasToken: Boolean(response?.data?.token?.access_token),
+          });
           onSuccess(response);
         }
       } catch (error) {
