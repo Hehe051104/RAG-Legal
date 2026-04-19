@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-// 这里的函数名必须从 proxy 改为 middleware
-export async function middleware(_request: NextRequest) {
+export async function proxy(_request: NextRequest) {
   return NextResponse.next();
 }
 
