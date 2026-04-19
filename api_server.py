@@ -90,28 +90,16 @@ app = FastAPI(
     ]
 )
 
-required_origins = {
-    "https://rag-legal.pages.dev",
-    "http://localhost:3000",
-}
-
-extra_origins = {
-    origin.strip()
-    for origin in os.getenv("CORS_ORIGINS", "").split(",")
-    if origin.strip()
-}
-
-allowed_origins = sorted(required_origins | extra_origins)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
-
 app.include_router(auth_router)
+
+
+@app.middleware("http")
+async def skip_body_parse_for_options(request: Request, call_next):
+    # 预检请求绝不做 Body 解析，直接放行给后续中间件/路由。
+    if request.method.upper() == "OPTIONS":
+        return await call_next(request)
+
+    return await call_next(request)
 
 
 def _extract_token_from_request(request: Request) -> str | None:
@@ -318,7 +306,30 @@ async def chat_endpoint(req: ChatRequest):
 @app.options("/api/chat")
 async def chat_preflight() -> JSONResponse:
     # 显式兜底 OPTIONS，避免上游或自定义中间件导致预检失败。
-    return JSONResponse(status_code=204, content={})
+    return JSONResponse(status_code=200, content={})
+
+
+required_origins = {
+    "https://rag-legal.pages.dev",
+    "http://localhost:3000",
+}
+
+extra_origins = {
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+}
+
+allowed_origins = sorted(required_origins | extra_origins)
+
+# 按要求放在所有中间件/路由定义之后，优先接管 OPTIONS 预检。
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     # 启动服务器，对外暴露 8000 端口
