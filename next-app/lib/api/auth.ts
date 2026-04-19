@@ -64,6 +64,10 @@ export type LoginParams = {
   password: string;
 };
 
+export type GoogleLoginParams = {
+  credential: string;
+};
+
 export type ResetPasswordParams = {
   email: string;
   code: string;
@@ -137,6 +141,13 @@ export function register(params: RegisterUserParams) {
 
 export function login(params: LoginParams) {
   return requestJson<LoginResponse>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export function googleLogin(params: GoogleLoginParams) {
+  return requestJson<LoginResponse>("/api/auth/google", {
     method: "POST",
     body: JSON.stringify(params),
   });

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import importlib
 import os
 import secrets
 from typing import Any, Literal
@@ -38,6 +39,13 @@ ADMIN_EMAILS = {
     email.strip().lower()
     for email in os.getenv("ADMIN_EMAILS", "").split(",")
     if email.strip()
+}
+GOOGLE_CLIENT_IDS = {
+    client_id.strip()
+    for client_id in (
+        f"{os.getenv('GOOGLE_CLIENT_ID', '')},{os.getenv('NEXT_PUBLIC_GOOGLE_CLIENT_ID', '')}".split(",")
+    )
+    if client_id.strip()
 }
 
 
@@ -250,6 +258,18 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=6, max_length=1024)
 
 
+class GoogleLoginRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "credential": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...",
+            },
+        }
+    )
+
+    credential: str = Field(min_length=20)
+
+
 class ResetPasswordRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
@@ -355,6 +375,36 @@ def decode_access_token(token: str) -> dict[str, Any]:
         raise
     except JWTError as exc:
         raise AuthError("JWT 无效", status_code=401) from exc
+
+
+def verify_google_token(credential: str) -> dict[str, Any]:
+    try:
+        google_requests_module = importlib.import_module("google.auth.transport.requests")
+        google_id_token_module = importlib.import_module("google.oauth2.id_token")
+    except Exception as exc:
+        raise AuthError("Google 登录服务未安装，请联系管理员", status_code=500) from exc
+
+    if not GOOGLE_CLIENT_IDS:
+        raise AuthError("Google 登录服务未配置 Client ID", status_code=500)
+
+    try:
+        payload = google_id_token_module.verify_oauth2_token(
+            credential,
+            google_requests_module.Request(),
+        )
+    except Exception as exc:
+        raise AuthError("Google 凭证无效或已过期", status_code=401) from exc
+
+    aud = str(payload.get("aud") or "").strip()
+    iss = str(payload.get("iss") or "").strip()
+
+    if aud not in GOOGLE_CLIENT_IDS:
+        raise AuthError("Google 凭证来源不受信任", status_code=401)
+
+    if iss not in {"accounts.google.com", "https://accounts.google.com"}:
+        raise AuthError("Google 凭证签发方无效", status_code=401)
+
+    return dict(payload)
 
 
 def resolve_role(email: str, invite_code: str | None) -> str:
@@ -496,6 +546,61 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
 
     token_data = create_access_token(user)
 
+    return build_login_response(user, token_data)
+
+
+@router.post("/google", response_model=LoginResponse, responses=ERROR_RESPONSES)
+async def google_login(payload: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
+    google_payload = verify_google_token(payload.credential)
+
+    google_subject = str(google_payload.get("sub") or "").strip()
+    email = str(google_payload.get("email") or "").strip().lower()
+    name = str(google_payload.get("name") or "").strip() or "Google用户"
+    picture = str(google_payload.get("picture") or "").strip() or None
+    email_verified = bool(google_payload.get("email_verified"))
+
+    if not google_subject:
+        raise AuthError("Google 账号信息不完整", status_code=401)
+
+    if not email:
+        raise AuthError("Google 账号未返回邮箱，无法登录", status_code=401)
+
+    if not email_verified:
+        raise AuthError("Google 邮箱未验证，无法登录", status_code=401)
+
+    user = await db.scalar(select(User).where(User.google_id == google_subject))
+
+    if not user:
+        user = await db.scalar(select(User).where(User.email == email))
+
+    if user:
+        if not user.google_id:
+            user.google_id = google_subject
+        if not user.username and name:
+            user.username = name
+        if picture:
+            user.avatar_url = picture
+        user.is_verified = True
+        db.add(user)
+    else:
+        user = User(
+            email=email,
+            username=name,
+            password_hash=None,
+            provider="google",
+            google_id=google_subject,
+            avatar_url=picture,
+            role=resolve_role(email, None),
+            tier="premium",
+            is_premium=True,
+            is_verified=True,
+        )
+        db.add(user)
+
+    await db.commit()
+    await db.refresh(user)
+
+    token_data = create_access_token(user)
     return build_login_response(user, token_data)
 
 

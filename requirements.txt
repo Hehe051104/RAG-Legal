@@ -13,3 +13,4 @@ argon2-cffi
 pydantic-settings
 email-validator
 python-jose[cryptography]
+google-auth
