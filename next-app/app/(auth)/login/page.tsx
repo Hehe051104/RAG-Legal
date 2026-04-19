@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 import { toast } from "@/components/chat/toast";
+import { GoogleLoginButton } from "@/components/auth/google-login-button";
 import { AnimatedCharacters } from "@/components/ui/animated-characters";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,26 @@ import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button
 import { Label } from "@/components/ui/label";
 import { login } from "@/lib/api/auth";
 import { saveAuthSession } from "@/lib/auth/session-client";
+
+const completeLogin = (
+  response: Awaited<ReturnType<typeof login>>,
+  remember: boolean,
+  router: ReturnType<typeof useRouter>
+) => {
+  const role = response.data.user.role;
+  saveAuthSession({
+    token: response.data.token.access_token,
+    userEmail: response.data.user.email,
+    role,
+    expiresInSeconds: response.data.token.expires_in,
+    remember,
+  });
+  toast({
+    type: "success",
+    description: response.msg || "登录成功",
+  });
+  router.push(role === "admin" ? "/admin" : "/legal-assistant");
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,20 +61,7 @@ export default function LoginPage() {
         email: email.trim(),
         password,
       });
-
-      const role = response.data.user.role;
-      saveAuthSession({
-        token: response.data.token.access_token,
-        userEmail: response.data.user.email,
-        role,
-        expiresInSeconds: response.data.token.expires_in,
-        remember,
-      });
-      toast({
-        type: "success",
-        description: response.msg || "登录成功",
-      });
-      router.push(role === "admin" ? "/admin" : "/legal-assistant");
+      completeLogin(response, remember, router);
     } catch (error) {
       const message = error instanceof Error ? error.message : "邮箱或密码不正确，请重试。";
       setError(message);
@@ -193,6 +201,29 @@ export default function LoginPage() {
               className="w-full h-12 text-base font-medium"
               disabled={isLoading}
             />
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border/60" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">或使用</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <GoogleLoginButton
+                disabled={isLoading}
+                onSuccess={(response) => completeLogin(response, remember, router)}
+                onError={(message) => {
+                  setError(message);
+                  toast({
+                    type: "error",
+                    description: message,
+                  });
+                }}
+              />
+            </div>
           </form>
 
           <div className="text-center text-sm text-muted-foreground mt-8">
