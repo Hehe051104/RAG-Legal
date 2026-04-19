@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 from datetime import datetime, timedelta, timezone
 import os
 
@@ -24,6 +25,12 @@ from routers.auth import (
     decode_access_token,
     router as auth_router,
 )
+
+
+ONLINE_TTL_SECONDS = int(os.getenv("ONLINE_TTL_SECONDS", "75"))
+online_users_last_seen: dict[str, datetime] = {}
+online_users_profile: dict[str, dict[str, str | None]] = {}
+online_users_lock = asyncio.Lock()
 
 
 def _normalize_validation_field(loc: tuple[object, ...] | list[object] | None) -> str:
@@ -110,14 +117,7 @@ def _extract_token_from_request(request: Request) -> str | None:
     return None
 
 
-@app.get("/api/auth/session")
-async def get_auth_session(request: Request):
-    token = _extract_token_from_request(request)
-
-    if not token:
-        return {"user": None}
-
-    token_payload = decode_access_token(token)
+def _build_user_profile_from_payload(token_payload: dict[str, object]) -> dict[str, str | None]:
     email = str(token_payload.get("email") or "").strip() or None
     role = str(token_payload.get("role") or "user")
     user_id = str(token_payload.get("sub") or "").strip() or None
@@ -130,16 +130,124 @@ async def get_auth_session(request: Request):
     else:
         display_name = "User"
 
+    return {
+        "id": user_id,
+        "name": display_name,
+        "email": email,
+        "role": role,
+    }
+
+
+def _prune_expired_online_users(now: datetime) -> None:
+    expired_ids = [
+        user_id
+        for user_id, last_seen in online_users_last_seen.items()
+        if (now - last_seen).total_seconds() > ONLINE_TTL_SECONDS
+    ]
+
+    for user_id in expired_ids:
+        online_users_last_seen.pop(user_id, None)
+        online_users_profile.pop(user_id, None)
+
+
+async def _refresh_presence_from_request(request: Request) -> dict[str, object]:
+    token = _extract_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    token_payload = decode_access_token(token)
+    profile = _build_user_profile_from_payload(token_payload)
+    user_id = profile.get("id")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="JWT payload missing subject")
+
+    now = datetime.now(timezone.utc)
+
+    async with online_users_lock:
+        _prune_expired_online_users(now)
+        online_users_last_seen[user_id] = now
+        online_users_profile[user_id] = profile
+        online_count = len(online_users_last_seen)
+
+    return {
+        "status": "success",
+        "data": {
+            "online_count": online_count,
+            "user": profile,
+            "ttl_seconds": ONLINE_TTL_SECONDS,
+        },
+        "msg": "presence updated",
+    }
+
+
+@app.get("/api/auth/session")
+async def get_auth_session(request: Request):
+    token = _extract_token_from_request(request)
+
+    if not token:
+        return {"user": None}
+
+    token_payload = decode_access_token(token)
+    profile = _build_user_profile_from_payload(token_payload)
+
     expires = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
 
     return {
         "user": {
-            "id": user_id,
-            "name": display_name,
-            "email": email,
-            "role": role,
+            "id": profile.get("id"),
+            "name": profile.get("name"),
+            "email": profile.get("email"),
+            "role": profile.get("role"),
         },
         "expires": expires.isoformat(),
+    }
+
+
+@app.post("/api/presence/heartbeat")
+async def presence_heartbeat(request: Request):
+    return await _refresh_presence_from_request(request)
+
+
+@app.get("/api/presence/online-count")
+async def presence_online_count():
+    now = datetime.now(timezone.utc)
+    async with online_users_lock:
+        _prune_expired_online_users(now)
+        count = len(online_users_last_seen)
+
+    return {
+        "status": "success",
+        "data": {"online_count": count, "ttl_seconds": ONLINE_TTL_SECONDS},
+        "msg": "ok",
+    }
+
+
+@app.post("/api/presence/offline")
+async def presence_offline(request: Request):
+    token = _extract_token_from_request(request)
+    if not token:
+        return {"status": "success", "data": {"online_count": 0}, "msg": "no session"}
+
+    try:
+        token_payload = decode_access_token(token)
+    except Exception:
+        return {"status": "success", "data": {"online_count": 0}, "msg": "token invalid"}
+
+    user_id = str(token_payload.get("sub") or "").strip()
+    now = datetime.now(timezone.utc)
+
+    async with online_users_lock:
+        _prune_expired_online_users(now)
+        if user_id:
+            online_users_last_seen.pop(user_id, None)
+            online_users_profile.pop(user_id, None)
+        count = len(online_users_last_seen)
+
+    return {
+        "status": "success",
+        "data": {"online_count": count},
+        "msg": "offline marked",
     }
 
 
