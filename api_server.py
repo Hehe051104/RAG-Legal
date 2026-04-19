@@ -86,42 +86,12 @@ app = FastAPI(
     lifespan=lifespan,
     servers=[ # 不加这段会认为网页在哪,api在哪 会去手机的8000端口
         {"url": "https://api.hehe051104.me", "description": "公网生产环境"},
-        {"url": "https://register.rag-legal.pages.dev", "description": "固定的分支预览环境（把 register 换成你的实际分支名）"},
         {"url": "http://127.0.0.1:8000", "description": "本地开发环境"}
     ]
 )
 
 app.include_router(auth_router)
 
-
-@app.middleware("http")
-async def skip_body_parse_for_options(request: Request, call_next):
-    # 预检请求绝不做 Body 解析，直接返回 200 + CORS 响应头，避免被其它逻辑拦截成 400。
-    if request.method.upper() == "OPTIONS":
-        origin = (request.headers.get("origin") or "").strip()
-        req_headers = (
-            request.headers.get("access-control-request-headers")
-            or "Authorization,Content-Type"
-        )
-        req_method = (
-            request.headers.get("access-control-request-method")
-            or "GET,POST,PUT,DELETE,OPTIONS"
-        )
-
-        response = Response(status_code=200)
-        if origin:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Vary"] = "Origin"
-        else:
-            response.headers["Access-Control-Allow-Origin"] = "*"
-
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = req_method
-        response.headers["Access-Control-Allow-Headers"] = req_headers
-        response.headers["Access-Control-Max-Age"] = "86400"
-        return response
-
-    return await call_next(request)
 
 
 def _extract_token_from_request(request: Request) -> str | None:
@@ -325,32 +295,30 @@ async def chat_endpoint(req: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.options("/api/chat")
-async def chat_preflight() -> JSONResponse:
-    # 显式兜底 OPTIONS，避免上游或自定义中间件导致预检失败。
-    return JSONResponse(status_code=200, content={})
 
-
-required_origins = {
+required_origins = [
     "https://rag-legal.pages.dev",
+    "https://register.rag-legal.pages.dev",  # 组长，一定要把预览网址加在这里！
     "http://localhost:3000",
-}
+    "http://127.0.0.1:3000"
+]
 
-extra_origins = {
+extra_origins = [
     origin.strip()
     for origin in os.getenv("CORS_ORIGINS", "").split(",")
     if origin.strip()
-}
+]
 
-allowed_origins = sorted(required_origins | extra_origins)
+# 合并名单
+allowed_origins = required_origins + extra_origins
 
-# 按要求放在所有中间件/路由定义之后，优先接管 OPTIONS 预检。
+# 官方推荐的 CORS 终极解法
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_credentials=True,     # 允许前端携带 Cookie (认证必须)
+    allow_methods=["*"],        # 允许所有方法 (自动完美处理 OPTIONS)
+    allow_headers=["*"],        # 允许所有请求头
 )
 
 if __name__ == "__main__":
