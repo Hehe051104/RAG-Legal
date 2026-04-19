@@ -1,4 +1,4 @@
-export const runtime = "edge";
+export const runtime = 'edge';
 export const dynamic = "force-dynamic";
 
 const UPSTREAM_CHAT_PATH = "/api/chat";

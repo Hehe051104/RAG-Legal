@@ -43,6 +43,7 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    optimizePackageImports: ["lucide-react"],
     prefetchInlining: true,
     cachedNavigations: true,
     appNewScrollHandler: true,
