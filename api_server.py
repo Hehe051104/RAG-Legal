@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 import os
 
 from fastapi import FastAPI, HTTPException, Request
@@ -17,7 +18,12 @@ from search import run_search
 from rerank import rerank_context
 from RAG import rewrite_query, call_ollama_rag
 from database import init_db
-from routers.auth import AuthError, router as auth_router
+from routers.auth import (
+    AuthError,
+    JWT_EXPIRE_MINUTES,
+    decode_access_token,
+    router as auth_router,
+)
 
 
 def _normalize_validation_field(loc: tuple[object, ...] | list[object] | None) -> str:
@@ -90,7 +96,7 @@ allowed_origins = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001",
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,https://rag-legal.pages.dev,https://www.rag-legal.pages.dev",
     ).split(",")
     if origin.strip()
 ]
@@ -102,6 +108,55 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _extract_token_from_request(request: Request) -> str | None:
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            return token
+
+    cookie_names = ("legal_auth_token", "access_token", "token")
+    for cookie_name in cookie_names:
+        token = (request.cookies.get(cookie_name) or "").strip()
+        if token:
+            return token
+
+    return None
+
+
+@app.get("/api/auth/session")
+async def get_auth_session(request: Request):
+    token = _extract_token_from_request(request)
+
+    if not token:
+        return {"user": None}
+
+    token_payload = decode_access_token(token)
+    email = str(token_payload.get("email") or "").strip() or None
+    role = str(token_payload.get("role") or "user")
+    user_id = str(token_payload.get("sub") or "").strip() or None
+    name_from_payload = str(token_payload.get("name") or "").strip()
+
+    if name_from_payload:
+        display_name = name_from_payload
+    elif email and "@" in email:
+        display_name = email.split("@", 1)[0]
+    else:
+        display_name = "User"
+
+    expires = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+
+    return {
+        "user": {
+            "id": user_id,
+            "name": display_name,
+            "email": email,
+            "role": role,
+        },
+        "expires": expires.isoformat(),
+    }
 
 
 @app.exception_handler(AuthError)
@@ -254,6 +309,12 @@ async def chat_endpoint(req: ChatRequest):
     except Exception as e:
         print(f"❌ [API运行错误]: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.options("/api/chat")
+async def chat_preflight() -> JSONResponse:
+    # 显式兜底 OPTIONS，避免上游或自定义中间件导致预检失败。
+    return JSONResponse(status_code=204, content={})
 
 if __name__ == "__main__":
     # 启动服务器，对外暴露 8000 端口
