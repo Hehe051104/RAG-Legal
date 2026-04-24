@@ -1,3 +1,13 @@
+有分支了，那么前端想要正常访问需要在api_server.py的required_origin中添加前端的网页地址
+并在谷歌后台添加该网址以实现Google登录
+
+运行api_server.py要在本地通过隧道连接网络，需要先点击项目路径下的cloudflared-windows-amd64.msi
+并在管理员终端中运行：cloudflared tunnel run --token eyJhIjoiNzJiOWZhYzBkODE4NmFlMTk5ZjI0ZTljZGI2ZDUyZWYiLCJ0IjoiZWFmNzQ5NDctY2IzYS00NjEyLWFkMTMtMTBiZGJkMTc1OTkzIiwicyI6Ik5EVTNPV0UwTkRBdE5USXlaQzAwTjJZMUxXSmpNR1V0WVRZelltRTVaRFpoTldOayJ9
+
+不用就关闭终端，让别人用
+
+
+
 # 法律助手项目说明
 
 相关数据库已建立完成，只需要进行环境配置并启动服务。
