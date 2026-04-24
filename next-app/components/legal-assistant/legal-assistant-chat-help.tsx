@@ -1,6 +1,6 @@
 "use client";
 
-import { QuestionMarkIcon } from "lucide-react";
+import { CircleHelpIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ export function LegalAssistantChatHelp() {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button className="size-8 rounded-full bg-primary text-secondary opacity-60 hover:opacity-50" size="icon-sm" type="button" variant="ghost">
-          <QuestionMarkIcon className="size-4" />
+          <CircleHelpIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>
 

@@ -4,7 +4,7 @@ import { fileURLToPath } from "url"
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	turbopack: {
-		root: dirname(fileURLToPath(import.meta.url)),
+		root: dirname(dirname(fileURLToPath(import.meta.url))),
 	},
 	images: {
 		remotePatterns: [

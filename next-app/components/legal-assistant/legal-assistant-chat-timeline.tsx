@@ -30,7 +30,7 @@ export function LegalAssistantChatTimeline({
   messages: ChatMessage[];
   isSending: boolean;
   onQuickPrompt: (prompt: string) => void;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  messagesEndRef: React.Ref<HTMLDivElement>;
 }) {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-6 px-4 py-6 md:gap-7 md:px-6">

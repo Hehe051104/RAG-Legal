@@ -21,7 +21,7 @@ export function LegalAssistantChatFeed({
   }>;
   isSending: boolean;
   onQuickPrompt: (prompt: string) => void;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  messagesEndRef: React.Ref<HTMLDivElement>;
 }) {
   return (
     <>
