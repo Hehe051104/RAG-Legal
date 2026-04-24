@@ -2,19 +2,23 @@
 
 import { useMemo } from "react";
 
+import type { LegalAssistantConversation, LegalAssistantFolder } from "./api";
+
 export function useLegalAssistantSidebarData({
   conversations,
   folders,
 }: {
-  conversations: Array<{ id: string; folderId: string | null; updatedAt: string }>;
-  folders: Array<{ id: string }>;
+  conversations: LegalAssistantConversation[];
+  folders: LegalAssistantFolder[];
 }) {
   const sortedConversations = useMemo(
     () => [...conversations].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
     [conversations],
   );
 
-  const groupedFolders = useMemo(
+  const groupedFolders = useMemo<
+    Array<LegalAssistantFolder & { conversations: LegalAssistantConversation[] }>
+  >(
     () =>
       folders.map((folder) => ({
         ...folder,

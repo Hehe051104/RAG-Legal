@@ -1,5 +1,6 @@
 import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
+import { resolve } from "node:path";
 
 const basePath = process.env.IS_DEMO === "1" ? "/demo" : "";
 
@@ -44,6 +45,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],
+  },
+  turbopack: {
+    root: resolve(process.cwd(), ".."),
   },
 };
 

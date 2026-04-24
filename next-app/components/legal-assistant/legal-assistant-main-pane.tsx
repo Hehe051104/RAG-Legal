@@ -67,7 +67,8 @@ export function LegalAssistantMainPane({
   }, [messages, isSending]);
 
   return (
-    <div className="relative flex min-w-0 flex-1 flex-col bg-background">
+    <div className="relative flex min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,oklch(0.98_0.02_250_/0.22),transparent_38%),linear-gradient(to_bottom,oklch(0.99_0.01_260_/0.98),oklch(0.97_0.01_260_/0.95))] dark:bg-[radial-gradient(circle_at_top,oklch(0.36_0.02_255_/0.32),transparent_42%),linear-gradient(to_bottom,oklch(0.22_0.01_255_/0.98),oklch(0.18_0.01_260_/0.97))]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,oklch(0_0_0_/0.08)_100%)]" />
       <LegalAssistantChatHeader
         isSidebarOpen={isSidebarOpen}
         modelLabel={modelLabel}

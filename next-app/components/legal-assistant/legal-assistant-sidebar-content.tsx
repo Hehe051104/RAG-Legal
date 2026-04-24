@@ -43,7 +43,8 @@ export function LegalAssistantSidebarContent({
   const { groupedFolders, ungroupedConversations } = useLegalAssistantSidebarData({ conversations, folders });
 
   const sidebarBody = (
-    <div className="flex h-full min-h-0 flex-col bg-sidebar text-sidebar-foreground">
+    <div className="relative flex h-full min-h-0 flex-col bg-[linear-gradient(to_bottom,oklch(0.2_0.015_260),oklch(0.14_0.015_260))] text-sidebar-foreground">
+      <div className="pointer-events-none absolute inset-0 border-r border-white/10" />
       <LegalAssistantSidebarHeader onClose={() => setSideBarOpen(false)} />
       <LegalAssistantSidebarTopActions modelId={modelId} onCreateConversation={createConversation} onOpenSettings={() => setSettingsOpen(true)} />
 
