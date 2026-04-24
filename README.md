@@ -1,5 +1,12 @@
+统一官网（main分支）：rag-legal-git-main-hehe051104s-projects.vercel.app
+
+.env文件需要解压下载好然后放进主目录下
+
 有分支了，那么前端想要正常访问需要在api_server.py的required_origin中添加前端的网页地址
-并在谷歌后台添加该网址以实现Google登录
+网址一般为：rag-legal-git-分支名-hehe051104s-projects.vercel.app
+
+若要分支网站实现谷歌登录，需在谷歌后台添加该网址以实现Google登录（联系我进行后台操作）
+
 
 运行api_server.py要在本地通过隧道连接网络，需要先点击项目路径下的cloudflared-windows-amd64.msi
 并在管理员终端中运行：cloudflared tunnel run --token eyJhIjoiNzJiOWZhYzBkODE4NmFlMTk5ZjI0ZTljZGI2ZDUyZWYiLCJ0IjoiZWFmNzQ5NDctY2IzYS00NjEyLWFkMTMtMTBiZGJkMTc1OTkzIiwicyI6Ik5EVTNPV0UwTkRBdE5USXlaQzAwTjJZMUxXSmpNR1V0WVRZelltRTVaRFpoTldOayJ9
