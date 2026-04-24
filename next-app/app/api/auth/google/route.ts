@@ -1,8 +1,10 @@
-import { createAuthProxy } from "@/lib/auth/edge-auth-proxy";
+import { createExplicitAuthProxy } from "@/lib/auth/explicit-auth-proxy";
 
 export const dynamic = "force-dynamic";
 
-export const POST = createAuthProxy(
-  "/api/auth/google",
-  "Invalid JSON response from upstream Google login."
-);
+export const POST = createExplicitAuthProxy({
+  path: "/api/auth/google",
+  proxyName: "google",
+  errorLabel: "Google",
+  setAuthCookie: true,
+});

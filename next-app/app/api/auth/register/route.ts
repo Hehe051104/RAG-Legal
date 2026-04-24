@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
-import { createApiProxy } from "@/lib/edge-api-proxy";
+import { createExplicitAuthProxy } from "@/lib/auth/explicit-auth-proxy";
 
-const proxy = createApiProxy("/api/auth/register");
-
-export const POST = proxy;
+export const POST = createExplicitAuthProxy({
+  path: "/api/auth/register",
+  proxyName: "register",
+  errorLabel: "Register",
+});
