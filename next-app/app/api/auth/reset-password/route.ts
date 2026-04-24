@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
-import { createApiProxy } from "@/lib/edge-api-proxy";
+import { createExplicitAuthProxy } from "@/lib/auth/explicit-auth-proxy";
 
-const proxy = createApiProxy("/api/auth/reset-password");
-
-export const POST = proxy;
+export const POST = createExplicitAuthProxy({
+  path: "/api/auth/reset-password",
+  proxyName: "reset-password",
+  errorLabel: "Reset-password",
+});
