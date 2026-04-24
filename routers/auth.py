@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import importlib
 import os
+import re
 import secrets
 from typing import Any, Literal
 
@@ -33,6 +34,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "120"))
+GOOGLE_CLOCK_SKEW_SECONDS = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "60"))
 RESET_CODE_EXPIRE_MINUTES = int(os.getenv("RESET_CODE_EXPIRE_MINUTES", "5"))
 ADMIN_INVITE_CODE = os.getenv("ADMIN_INVITE_CODE", "").strip()
 ADMIN_EMAILS = {
@@ -40,13 +42,21 @@ ADMIN_EMAILS = {
     for email in os.getenv("ADMIN_EMAILS", "").split(",")
     if email.strip()
 }
-GOOGLE_CLIENT_IDS = {
-    client_id.strip()
-    for client_id in (
-        f"{os.getenv('GOOGLE_CLIENT_ID', '')},{os.getenv('NEXT_PUBLIC_GOOGLE_CLIENT_ID', '')}".split(",")
-    )
-    if client_id.strip()
-}
+def _parse_google_client_ids() -> set[str]:
+    raw_values = [
+        os.getenv("GOOGLE_CLIENT_ID", ""),
+        os.getenv("NEXT_PUBLIC_GOOGLE_CLIENT_ID", ""),
+    ]
+
+    combined = ",".join(value for value in raw_values if value)
+    return {
+        item.strip()
+        for item in re.split(r"[,\s]+", combined)
+        if item and item.strip()
+    }
+
+
+GOOGLE_CLIENT_IDS = _parse_google_client_ids()
 
 
 class AuthStatus(BaseModel):
@@ -385,23 +395,34 @@ def verify_google_token(credential: str) -> dict[str, Any]:
         raise AuthError("Google 登录服务未安装，请联系管理员", status_code=500) from exc
 
     if not GOOGLE_CLIENT_IDS:
+        print("[auth][google] no client ids configured from env")
         raise AuthError("Google 登录服务未配置 Client ID", status_code=500)
 
     try:
         payload = google_id_token_module.verify_oauth2_token(
             credential,
             google_requests_module.Request(),
+            clock_skew_in_seconds=GOOGLE_CLOCK_SKEW_SECONDS,
         )
     except Exception as exc:
+        print(f"[auth][google] token verify failed: {type(exc).__name__}: {exc}")
         raise AuthError("Google 凭证无效或已过期", status_code=401) from exc
 
     aud = str(payload.get("aud") or "").strip()
     iss = str(payload.get("iss") or "").strip()
 
     if aud not in GOOGLE_CLIENT_IDS:
+        print(
+            "[auth][google] aud mismatch:",
+            {
+                "aud": aud,
+                "allowed": sorted(GOOGLE_CLIENT_IDS),
+            },
+        )
         raise AuthError("Google 凭证来源不受信任", status_code=401)
 
     if iss not in {"accounts.google.com", "https://accounts.google.com"}:
+        print(f"[auth][google] issuer invalid: {iss}")
         raise AuthError("Google 凭证签发方无效", status_code=401)
 
     return dict(payload)

@@ -43,8 +43,7 @@ type GoogleLoginButtonProps = {
 };
 
 const GOOGLE_CLIENT_ID =
-  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
-  "916410158693-ddadpk9ak3ebp940gma7hls4ddlrnpc0.apps.googleusercontent.com";
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
 
 export function GoogleLoginButton({
   disabled = false,
@@ -65,7 +64,7 @@ export function GoogleLoginButton({
       }
 
       if (!credential || cancelled) {
-        onError("Google 登录失败：未获取到凭证");
+        onError("Google 登录失败：未获取到凭证，请检查 NEXT_PUBLIC_GOOGLE_CLIENT_ID 与 Google 控制台授权域名是否匹配");
         return;
       }
 
