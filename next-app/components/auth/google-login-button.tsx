@@ -50,10 +50,35 @@ export function GoogleLoginButton({
   onSuccess,
   onError,
 }: GoogleLoginButtonProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
   const submittingRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [buttonWidth, setButtonWidth] = useState(320);
+
+  useEffect(() => {
+    const updateButtonWidth = () => {
+      const measuredWidth = containerRef.current?.clientWidth;
+      setButtonWidth(measuredWidth ? Math.min(Math.floor(measuredWidth), 400) : 320);
+    };
+
+    updateButtonWidth();
+
+    if (typeof ResizeObserver === "undefined" || !containerRef.current) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateButtonWidth();
+    });
+
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,15 +138,12 @@ export function GoogleLoginButton({
 
       buttonRef.current.innerHTML = "";
       window.google.accounts.id.renderButton(buttonRef.current, {
-        theme: "outline",
+        theme: "filled_black",
         size: "large",
         text: "signin_with",
         shape: "pill",
-        width: 320,
+        width: buttonWidth,
       });
-
-      // One Tap
-      window.google.accounts.id.prompt();
       initializedRef.current = true;
     };
 
@@ -162,11 +184,11 @@ export function GoogleLoginButton({
       script?.removeEventListener("load", onLoad);
       window.google?.accounts?.id.cancel();
     };
-  }, [disabled, onError, onSuccess]);
+  }, [buttonWidth, disabled, onError, onSuccess]);
 
   return (
-    <div className="space-y-3">
-      <div ref={buttonRef} />
+    <div ref={containerRef} className="flex w-full max-w-[400px] flex-col items-center space-y-3">
+      <div ref={buttonRef} className="w-full" />
       {(isLoading || disabled) && (
         <p className="text-center text-xs text-muted-foreground">
           {isLoading ? "Google 登录中..." : "Google 登录暂不可用"}
