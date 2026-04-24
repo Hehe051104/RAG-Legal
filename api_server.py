@@ -411,6 +411,7 @@ required_origins = [
     "http://127.0.0.1:3000",
     "https://rag-legal-jet.vercel.app",
     "https://rag-legal-git-main-hehe051104s-projects.vercel.app",
+    "https://rag-legal-git-chatbot-hehe051104s-projects.vercel.app",
 ]
 
 extra_origins = [
