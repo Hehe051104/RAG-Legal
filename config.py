@@ -1,8 +1,12 @@
 import torch
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
 
 class Config:
     # 数据库配置
-    DB_PATH = "./legal_vector_db"
+    DB_PATH = str(BASE_DIR / "legal_vector_db")
     COLLECTION_NAME = "china_law_library"
 
     # 模型配置

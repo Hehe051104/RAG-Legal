@@ -7,6 +7,7 @@ import os
 import smtplib
 import ssl
 import time
+from pathlib import Path
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -16,7 +17,8 @@ from dotenv import load_dotenv
 from passlib.context import CryptContext
 from passlib.exc import MissingBackendError
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
 
 pwd_context = CryptContext(
     schemes=["argon2", "bcrypt_sha256", "bcrypt"],
