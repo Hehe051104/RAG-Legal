@@ -75,6 +75,7 @@ type HomeContextValue = HomeState & {
 
 const STORAGE_KEY = "legal-assistant-home-state-v1";
 const DEFAULT_MODEL_ID = "legal-default";
+const DEFAULT_CONVERSATION_TITLE = "新对话";
 
 const initialState: HomeState = {
   isSideBarOpen: true,
@@ -98,7 +99,10 @@ type Action =
   | { type: "UPSERT_CONVERSATION"; payload: LegalAssistantConversation }
   | { type: "RENAME_CONVERSATION"; payload: { conversationId: string; title: string } }
   | { type: "DELETE_CONVERSATION"; payload: string }
-  | { type: "MOVE_CONVERSATION_TO_FOLDER"; payload: { conversationId: string; folderId: string | null } }
+  | {
+      type: "MOVE_CONVERSATION_TO_FOLDER";
+      payload: { conversationId: string; folderId: string | null };
+    }
   | { type: "CREATE_FOLDER"; payload: LegalAssistantFolder }
   | { type: "RENAME_FOLDER"; payload: { folderId: string; name: string } }
   | { type: "DELETE_FOLDER"; payload: string }
@@ -112,7 +116,12 @@ type Action =
     }
   | {
       type: "FINALIZE_MESSAGE";
-      payload: { conversationId: string; messageId: string; content: string; isError?: boolean };
+      payload: {
+        conversationId: string;
+        messageId: string;
+        content: string;
+        isError?: boolean;
+      };
     }
   | { type: "SET_SENDING"; payload: boolean }
   | { type: "CLEAR_ALL" };
@@ -133,9 +142,14 @@ function safeParseState(raw: string | null): StoredHomeState | null {
         typeof parsed.selectedConversationId === "string" || parsed.selectedConversationId === null
           ? parsed.selectedConversationId ?? null
           : null,
-      conversations: Array.isArray(parsed.conversations) ? (parsed.conversations as LegalAssistantConversation[]) : [],
+      conversations: Array.isArray(parsed.conversations)
+        ? (parsed.conversations as LegalAssistantConversation[])
+        : [],
       folders: Array.isArray(parsed.folders) ? (parsed.folders as LegalAssistantFolder[]) : [],
-      modelId: typeof parsed.modelId === "string" && parsed.modelId.trim() ? parsed.modelId : DEFAULT_MODEL_ID,
+      modelId:
+        typeof parsed.modelId === "string" && parsed.modelId.trim()
+          ? parsed.modelId
+          : DEFAULT_MODEL_ID,
       theme:
         parsed.theme === "dark" || parsed.theme === "light" || parsed.theme === "system"
           ? parsed.theme
@@ -162,7 +176,9 @@ function loadInitialState(): HomeState {
   };
 }
 
-function touchConversation(conversation: LegalAssistantConversation): LegalAssistantConversation {
+function touchConversation(
+  conversation: LegalAssistantConversation,
+): LegalAssistantConversation {
   return {
     ...conversation,
     updatedAt: new Date().toISOString(),
@@ -214,9 +230,13 @@ function removeConversationFromFolders(
 ) {
   return folders.map((folder) => ({
     ...folder,
-    conversationIds: folder.conversationIds.filter((currentId) => currentId !== conversationId),
+    conversationIds: folder.conversationIds.filter((id) => id !== conversationId),
     updatedAt: new Date().toISOString(),
   }));
+}
+
+function buildConversationTitle(source: string): string {
+  return source.trim().slice(0, 28) || DEFAULT_CONVERSATION_TITLE;
 }
 
 function reducer(state: HomeState, action: Action): HomeState {
@@ -255,14 +275,21 @@ function reducer(state: HomeState, action: Action): HomeState {
     }
 
     case "UPSERT_CONVERSATION": {
-      const exists = state.conversations.some((conversation) => conversation.id === action.payload.id);
+      const exists = state.conversations.some(
+        (conversation) => conversation.id === action.payload.id,
+      );
+
       const conversations = exists
         ? state.conversations.map((conversation) =>
             conversation.id === action.payload.id ? action.payload : conversation,
           )
         : [action.payload, ...state.conversations];
 
-      const folders = addConversationToFolder(state.folders, action.payload.folderId, action.payload.id);
+      const folders = addConversationToFolder(
+        state.folders,
+        action.payload.folderId,
+        action.payload.id,
+      );
 
       return {
         ...state,
@@ -276,7 +303,10 @@ function reducer(state: HomeState, action: Action): HomeState {
         ...state,
         conversations: state.conversations.map((conversation) =>
           conversation.id === action.payload.conversationId
-            ? touchConversation({ ...conversation, title: action.payload.title.trim() || conversation.title })
+            ? touchConversation({
+                ...conversation,
+                title: action.payload.title.trim() || conversation.title,
+              })
             : conversation,
         ),
       };
@@ -285,6 +315,7 @@ function reducer(state: HomeState, action: Action): HomeState {
       const remainingConversations = state.conversations.filter(
         (conversation) => conversation.id !== action.payload,
       );
+
       const nextSelectedId =
         state.selectedConversationId === action.payload
           ? remainingConversations[0]?.id ?? null
@@ -299,7 +330,11 @@ function reducer(state: HomeState, action: Action): HomeState {
     }
 
     case "MOVE_CONVERSATION_TO_FOLDER": {
-      const foldersWithoutConversation = removeConversationFromFolders(state.folders, action.payload.conversationId);
+      const foldersWithoutConversation = removeConversationFromFolders(
+        state.folders,
+        action.payload.conversationId,
+      );
+
       const folders = addConversationToFolder(
         foldersWithoutConversation,
         action.payload.folderId,
@@ -428,6 +463,34 @@ function applyTheme(theme: LegalAssistantTheme) {
   root.classList.toggle("dark", theme === "dark");
 }
 
+function buildStoredState(state: HomeState): StoredHomeState {
+  return {
+    isSideBarOpen: state.isSideBarOpen,
+    selectedConversationId: state.selectedConversationId,
+    conversations: state.conversations,
+    folders: state.folders,
+    modelId: state.modelId,
+    theme: state.theme,
+  };
+}
+
+function createNewConversationFromMessage(
+  text: string,
+  modelId: string,
+): LegalAssistantConversation {
+  const now = new Date().toISOString();
+
+  return {
+    id: generateUUID(),
+    title: buildConversationTitle(text),
+    folderId: null,
+    modelId,
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+  };
+}
+
 export function HomeProvider({
   children,
   authToken,
@@ -447,16 +510,7 @@ export function HomeProvider({
       return;
     }
 
-    const stored: StoredHomeState = {
-      isSideBarOpen: state.isSideBarOpen,
-      selectedConversationId: state.selectedConversationId,
-      conversations: state.conversations,
-      folders: state.folders,
-      modelId: state.modelId,
-      theme: state.theme,
-    };
-
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(buildStoredState(state)));
   }, [hydrated, state]);
 
   useEffect(() => {
@@ -478,7 +532,7 @@ export function HomeProvider({
       const now = new Date().toISOString();
       const conversation: LegalAssistantConversation = {
         id: generateUUID(),
-        title: options?.title?.trim() || "新对话",
+        title: options?.title?.trim() || DEFAULT_CONVERSATION_TITLE,
         folderId: options?.folderId ?? null,
         modelId: options?.modelId ?? state.modelId,
         createdAt: now,
@@ -500,9 +554,12 @@ export function HomeProvider({
     dispatch({ type: "DELETE_CONVERSATION", payload: conversationId });
   }, []);
 
-  const moveConversationToFolder = useCallback((conversationId: string, folderId: string | null) => {
-    dispatch({ type: "MOVE_CONVERSATION_TO_FOLDER", payload: { conversationId, folderId } });
-  }, []);
+  const moveConversationToFolder = useCallback(
+    (conversationId: string, folderId: string | null) => {
+      dispatch({ type: "MOVE_CONVERSATION_TO_FOLDER", payload: { conversationId, folderId } });
+    },
+    [],
+  );
 
   const createFolder = useCallback((name: string) => {
     const now = new Date().toISOString();
@@ -539,16 +596,9 @@ export function HomeProvider({
 
       const existingConversation =
         state.conversations.find((item) => item.id === state.selectedConversationId) ?? null;
-      const now = new Date().toISOString();
-      const conversation = existingConversation ?? {
-        id: generateUUID(),
-        title: text.slice(0, 28) || "新对话",
-        folderId: null,
-        modelId: state.modelId,
-        createdAt: now,
-        updatedAt: now,
-        messages: [],
-      };
+
+      const conversation =
+        existingConversation ?? createNewConversationFromMessage(text, state.modelId);
 
       const userMessage: LegalAssistantMessage = {
         id: generateUUID(),
@@ -570,13 +620,15 @@ export function HomeProvider({
       const conversationForState = touchConversation({
         ...conversation,
         modelId: state.modelId,
-        title: conversation.title === "新对话" || !conversation.title.trim() ? text.slice(0, 28) || "新对话" : conversation.title,
+        title:
+          conversation.title === DEFAULT_CONVERSATION_TITLE || !conversation.title.trim()
+            ? buildConversationTitle(text)
+            : conversation.title,
         messages: [...conversation.messages, userMessage, assistantPlaceholder],
       });
 
       dispatch({ type: "UPSERT_CONVERSATION", payload: conversationForState });
       dispatch({ type: "SET_SELECTED_CONVERSATION", payload: conversationForState.id });
-
       dispatch({ type: "SET_SENDING", payload: true });
 
       const requestMessages = [...conversation.messages, userMessage];
@@ -614,7 +666,10 @@ export function HomeProvider({
           });
         });
 
-        const finalText = (assistantText || streamedText || "后端已响应，但未返回可展示文本。").trim();
+        const finalText = (
+          assistantText || streamedText || "后端已响应，但未返回可展示文本。"
+        ).trim();
+
         dispatch({
           type: "FINALIZE_MESSAGE",
           payload: {
@@ -625,17 +680,24 @@ export function HomeProvider({
           },
         });
 
-        if (conversationForState.title === "新对话" || conversationForState.title === "") {
+        if (
+          conversationForState.title === DEFAULT_CONVERSATION_TITLE ||
+          conversationForState.title === ""
+        ) {
           dispatch({
             type: "RENAME_CONVERSATION",
             payload: {
               conversationId: conversationForState.id,
-              title: text.slice(0, 28),
+              title: buildConversationTitle(text),
             },
           });
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : "请求后端失败，请检查 API 地址和登录状态。";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "请求后端失败，请检查 API 地址和登录状态。";
+
         dispatch({
           type: "FINALIZE_MESSAGE",
           payload: {
@@ -652,10 +714,11 @@ export function HomeProvider({
     [authToken, state.conversations, state.isSending, state.modelId, state.selectedConversationId],
   );
 
-  const selectedConversation = useMemo(
-    () => state.conversations.find((conversation) => conversation.id === state.selectedConversationId) ?? null,
-    [state.conversations, state.selectedConversationId],
-  );
+  const selectedConversation = useMemo(() => {
+    return state.conversations.find(
+      (conversation) => conversation.id === state.selectedConversationId,
+    ) ?? null;
+  }, [state.conversations, state.selectedConversationId]);
 
   const selectedFolder = useMemo(() => {
     if (!selectedConversation?.folderId) {
@@ -672,7 +735,8 @@ export function HomeProvider({
       selectedFolder,
       authToken,
       createConversation,
-      selectConversation: (conversationId) => dispatch({ type: "SET_SELECTED_CONVERSATION", payload: conversationId }),
+      selectConversation: (conversationId) =>
+        dispatch({ type: "SET_SELECTED_CONVERSATION", payload: conversationId }),
       renameConversation,
       deleteConversation,
       moveConversationToFolder,

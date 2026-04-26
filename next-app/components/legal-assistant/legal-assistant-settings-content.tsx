@@ -23,23 +23,32 @@ export function LegalAssistantSettingsContent() {
     authToken,
   } = useHome();
 
+  const selectedConversationId = selectedConversation?.id ?? null;
   const currentFolderId = selectedConversation?.folderId ?? null;
 
+  const handleMoveConversation = (folderId: string | null) => {
+    if (!selectedConversationId) {
+      return;
+    }
+
+    moveConversationToFolder(selectedConversationId, folderId);
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-2">
       <LegalAssistantSettingsBasics
         canMoveConversation={Boolean(selectedConversation)}
         currentFolderId={currentFolderId}
         folderOptions={folders}
         modelId={modelId}
         onModelIdChange={setModelId}
-        onMoveConversation={(folderId) => moveConversationToFolder(selectedConversation?.id ?? "", folderId)}
+        onMoveConversation={handleMoveConversation}
         onThemeChange={(value) => setTheme(value as typeof theme)}
         selectedFolderName={selectedFolder?.name ?? null}
         theme={theme}
       />
 
-      <Separator />
+      <Separator className="my-1" />
 
       <LegalAssistantSettingsSummary
         authStatus={authToken ? "已验证" : "未登录"}
@@ -53,7 +62,7 @@ export function LegalAssistantSettingsContent() {
         hasSelectedConversation={Boolean(selectedConversation)}
         onClearHistory={clearAll}
         onCreateFolder={() => createFolder("新文件夹")}
-        onMoveConversation={(folderId) => moveConversationToFolder(selectedConversation?.id ?? "", folderId)}
+        onMoveConversation={(folderId) => handleMoveConversation(folderId)}
       />
     </div>
   );

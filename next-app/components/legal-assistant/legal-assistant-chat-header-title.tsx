@@ -1,23 +1,29 @@
 "use client";
 
+type LegalAssistantChatHeaderTitleProps = {
+  title: string;
+  selectedFolderName: string | null;
+  modelLabel: string;
+};
+
 export function LegalAssistantChatHeaderTitle({
   title,
   selectedFolderName,
   modelLabel,
-}: {
-  title: string;
-  selectedFolderName: string | null;
-  modelLabel: string;
-}) {
+}: LegalAssistantChatHeaderTitleProps) {
+  const meta = [selectedFolderName, modelLabel].filter(Boolean).join(" · ");
+
   return (
     <div className="flex min-w-0 flex-col items-center text-center">
-      <div className="flex items-center gap-2">
-        <h1 className="max-w-[200px] truncate text-lg font-bold sm:max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px]">{title}</h1>
-        {selectedFolderName ? <span className="hidden rounded-full bg-muted px-2 py-1 text-[11px] text-muted-foreground md:inline-flex">{selectedFolderName}</span> : null}
-      </div>
-      <div className="hidden max-w-[700px] truncate text-xs font-normal text-muted-foreground md:block">
-        {modelLabel}
-      </div>
+      <h1 className="max-w-[220px] truncate text-sm font-semibold text-foreground sm:max-w-[380px] md:max-w-[460px] lg:max-w-[560px] xl:max-w-[660px]">
+        {title}
+      </h1>
+
+      {meta ? (
+        <div className="hidden max-w-[680px] truncate text-[11px] font-normal text-muted-foreground md:block">
+          {meta}
+        </div>
+      ) : null}
     </div>
   );
 }

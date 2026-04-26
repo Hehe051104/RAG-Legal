@@ -2,15 +2,24 @@
 
 import { MessageSquareIcon } from "lucide-react";
 
-export function LegalAssistantSidebarFooterStatus({ messageCount }: { messageCount: number | null }) {
+type LegalAssistantSidebarFooterStatusProps = {
+  messageCount: number | null;
+};
+
+export function LegalAssistantSidebarFooterStatus({
+  messageCount,
+}: LegalAssistantSidebarFooterStatusProps) {
+  const statusText = typeof messageCount === "number" ? `${messageCount} 条消息` : "等待你的提问";
+
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-sidebar-accent/20 px-3 py-3">
-      <div className="flex size-10 items-center justify-center rounded-2xl bg-sidebar-accent text-sidebar-accent-foreground">
-        <MessageSquareIcon className="size-4" />
+    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-sidebar-border/60 bg-sidebar-accent/20 px-2.5 py-2">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground">
+        <MessageSquareIcon className="size-3.5" />
       </div>
+
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium">智能法律问答</div>
-        <div className="truncate text-xs text-sidebar-foreground/55">{messageCount ? `${messageCount} 条消息` : "等待你的提问"}</div>
+        <div className="truncate text-xs font-medium uppercase tracking-[0.1em] text-sidebar-foreground/60">Session</div>
+        <div className="truncate text-xs text-sidebar-foreground/80">{statusText}</div>
       </div>
     </div>
   );

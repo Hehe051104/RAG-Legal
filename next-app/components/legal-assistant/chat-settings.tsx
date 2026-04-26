@@ -1,10 +1,17 @@
 "use client";
 
-import { Settings2Icon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle2Icon, ChevronDownIcon, SlidersHorizontalIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useHome } from "./home-context";
 
@@ -22,68 +29,55 @@ const MODEL_GROUPS = [
 export function ChatSettings() {
   const { modelId, setModelId } = useHome();
   const [open, setOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "i") {
-        event.preventDefault();
-        setOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const allModels = useMemo(
-    () => MODEL_GROUPS.flatMap((group) => group.models),
-    []
-  );
+  const activeGroupLabel = useMemo(() => {
+    return MODEL_GROUPS.find((group) => group.models.includes(modelId))?.label ?? "自定义";
+  }, [modelId]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button ref={buttonRef} className="flex items-center gap-2 rounded-full px-3" size="sm" variant="ghost">
-          <div className="max-w-[120px] truncate text-sm font-medium sm:max-w-[200px] md:max-w-[260px]">{modelId}</div>
-          <Settings2Icon className="size-4" />
+    <DropdownMenu onOpenChange={setOpen} open={open}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          className="gap-1.5 rounded-md border-border/50 text-muted-foreground shadow-none transition-colors hover:text-foreground"
+          size="sm"
+          variant="outline"
+        >
+          <SlidersHorizontalIcon className="size-4" />
+          <span className="hidden max-w-[160px] truncate md:inline">{modelId}</span>
+          <ChevronDownIcon className="size-4" />
         </Button>
-      </PopoverTrigger>
+      </DropdownMenuTrigger>
 
-      <PopoverContent className="relative flex max-h-[calc(100vh-60px)] w-[300px] flex-col space-y-4 overflow-auto rounded-lg border-2 p-6 shadow-lg sm:w-[350px] md:w-[400px] lg:w-[500px]">
-        <div>
-          <div className="text-sm font-semibold">模型设置</div>
-          <div className="text-xs text-muted-foreground">切换当前模型，`modelId` 会随请求传给后端。</div>
-        </div>
+      <DropdownMenuContent align="end" className="min-w-[320px]">
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>模型设置</span>
+          <span className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+            {activeGroupLabel}
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
 
-        <div className="space-y-3">
-          {MODEL_GROUPS.map((group) => (
-            <div key={group.label} className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {group.label}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {group.models.map((model) => (
-                  <Button
-                    key={model}
-                    className="rounded-full"
-                    onClick={() => setModelId(model)}
-                    size="sm"
-                    variant={modelId === model ? "default" : "outline"}
-                    type="button"
-                  >
-                    {model}
-                  </Button>
-                ))}
-              </div>
+        {MODEL_GROUPS.map((group) => (
+          <div className="py-1" key={group.label}>
+            <div className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              {group.label}
             </div>
-          ))}
-        </div>
 
-        <div className="rounded-2xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          当前模型：{modelId}
-        </div>
-      </PopoverContent>
-    </Popover>
+            {group.models.map((model) => (
+              <DropdownMenuItem
+                className="flex items-center justify-between"
+                key={model}
+                onSelect={() => {
+                  setModelId(model);
+                }}
+              >
+                <span>{model}</span>
+                {modelId === model ? <CheckCircle2Icon className="size-4 text-foreground" /> : null}
+              </DropdownMenuItem>
+            ))}
+          </div>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

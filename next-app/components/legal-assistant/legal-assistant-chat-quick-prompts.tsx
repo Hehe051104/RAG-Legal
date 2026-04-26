@@ -1,17 +1,19 @@
 "use client";
 
+type LegalAssistantChatQuickPromptsProps = {
+  prompts: string[];
+  onQuickPrompt: (prompt: string) => void;
+};
+
 export function LegalAssistantChatQuickPrompts({
   prompts,
   onQuickPrompt,
-}: {
-  prompts: string[];
-  onQuickPrompt: (prompt: string) => void;
-}) {
+}: LegalAssistantChatQuickPromptsProps) {
   return (
-    <div className="grid w-full max-w-3xl grid-cols-1 gap-3 md:grid-cols-2">
+    <div className="grid w-full gap-2.5 sm:grid-cols-2" data-testid="legal-assistant-quick-prompts">
       {prompts.map((prompt) => (
         <button
-          className="rounded-3xl border border-border/60 bg-card px-4 py-4 text-left text-sm leading-6 text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:bg-muted/40 hover:text-foreground"
+          className="h-auto w-full rounded-xl border border-border/50 bg-card/30 px-4 py-3 text-left text-[12px] leading-relaxed text-muted-foreground transition-all duration-200 sm:p-4 sm:text-[13px] hover:-translate-y-0.5 hover:bg-card/60 hover:text-foreground hover:shadow-[var(--shadow-card)]"
           key={prompt}
           onClick={() => onQuickPrompt(prompt)}
           type="button"

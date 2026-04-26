@@ -1,13 +1,35 @@
 "use client";
 
-import { ArrowDownIcon } from "lucide-react";
+import { ArrowUpIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function LegalAssistantComposerSendButton({ disabled, onSubmit }: { disabled: boolean; onSubmit: () => void }) {
+type LegalAssistantComposerSendButtonProps = {
+  disabled: boolean;
+  onSubmit: () => void;
+};
+
+export function LegalAssistantComposerSendButton({
+  disabled,
+  onSubmit,
+}: LegalAssistantComposerSendButtonProps) {
   return (
-    <Button className="h-12 w-12 rounded-2xl" disabled={disabled} type="button" onClick={onSubmit}>
-      <ArrowDownIcon className="size-4 -rotate-90" />
+    <Button
+      aria-label="发送消息"
+      className={cn(
+        "h-7 w-7 rounded-xl transition-all duration-200",
+        disabled
+          ? "cursor-not-allowed bg-muted text-muted-foreground/25"
+          : "bg-foreground text-background hover:opacity-85 active:scale-95",
+      )}
+      data-testid="legal-assistant-send-button"
+      disabled={disabled}
+      onClick={onSubmit}
+      type="button"
+      variant="secondary"
+    >
+      <ArrowUpIcon className="size-4" />
     </Button>
   );
 }

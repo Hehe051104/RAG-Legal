@@ -1,9 +1,9 @@
 "use client";
 
-import { LegalAssistantMessageBubble } from "./legal-assistant-message-bubble";
 import { LegalAssistantChatEmptyState } from "./legal-assistant-chat-empty-state";
 import { LegalAssistantChatQuickPrompts } from "./legal-assistant-chat-quick-prompts";
 import { LegalAssistantChatSendingIndicator } from "./legal-assistant-chat-sending-indicator";
+import { LegalAssistantMessageBubble } from "./legal-assistant-message-bubble";
 
 const quickPrompts = [
   "请总结《民法典》中合同无效的核心判断要点。",
@@ -21,20 +21,22 @@ type ChatMessage = {
   isError?: boolean;
 };
 
+type LegalAssistantChatTimelineProps = {
+  messages: ChatMessage[];
+  isSending: boolean;
+  onQuickPrompt: (prompt: string) => void;
+};
+
 export function LegalAssistantChatTimeline({
   messages,
   isSending,
   onQuickPrompt,
-  messagesEndRef,
-}: {
-  messages: ChatMessage[];
-  isSending: boolean;
-  onQuickPrompt: (prompt: string) => void;
-  messagesEndRef: React.Ref<HTMLDivElement>;
-}) {
+}: LegalAssistantChatTimelineProps) {
+  const hasMessages = messages.length > 0;
+
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-6 px-4 py-6 md:gap-7 md:px-6">
-      {messages.length ? (
+    <div className="flex min-h-full w-full flex-col gap-5 md:gap-7">
+      {hasMessages ? (
         messages.map((message) => (
           <LegalAssistantMessageBubble
             content={message.content}
@@ -46,17 +48,13 @@ export function LegalAssistantChatTimeline({
           />
         ))
       ) : (
-        <>
+        <div className="flex w-full flex-col gap-6 py-2 md:gap-7">
           <LegalAssistantChatEmptyState />
           <LegalAssistantChatQuickPrompts onQuickPrompt={onQuickPrompt} prompts={quickPrompts} />
-        </>
+        </div>
       )}
 
-      {isSending ? (
-        <LegalAssistantChatSendingIndicator />
-      ) : null}
-
-      <div ref={messagesEndRef} />
+      {isSending ? <LegalAssistantChatSendingIndicator /> : null}
     </div>
   );
 }
