@@ -696,7 +696,7 @@ export function HomeProvider({
         const message =
           error instanceof Error
             ? error.message
-            : "请求后端失败，请检查 API 地址和登录状态。";
+              : "请求后端失败，请检查接口地址和登录状态。";
 
         dispatch({
           type: "FINALIZE_MESSAGE",

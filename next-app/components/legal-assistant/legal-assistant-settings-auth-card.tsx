@@ -10,7 +10,7 @@ export function LegalAssistantSettingsAuthCard({ authStatus }: LegalAssistantSet
   return (
     <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs text-muted-foreground">JWT 会话状态</div>
+        <div className="text-xs text-muted-foreground">登录令牌状态</div>
         <div
           className={
             isVerified

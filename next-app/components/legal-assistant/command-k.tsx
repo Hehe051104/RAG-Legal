@@ -61,7 +61,7 @@ export function CommandK() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>Command K</DialogTitle>
+          <DialogTitle>快捷指令面板</DialogTitle>
           <DialogDescription>
             输入一句话直接发到当前会话，使用当前登录态和后端配置。
           </DialogDescription>

@@ -40,11 +40,11 @@ export function LegalAssistantSettingsBasics({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium">modelId</Label>
+        <Label className="text-sm font-medium">模型标识</Label>
         <Input
           className="h-10 rounded-lg border-border/60"
           onChange={(event) => onModelIdChange(event.target.value)}
-          placeholder="请输入后端使用的 modelId"
+          placeholder="请输入后端使用的模型标识"
           value={modelId}
         />
         <div className="flex flex-wrap gap-2 pt-1">
@@ -104,7 +104,7 @@ export function LegalAssistantSettingsBasics({
         {!canMoveConversation ? (
           <div className="text-xs text-muted-foreground">先在侧栏选择一个会话，再进行文件夹归类。</div>
         ) : selectedFolderName ? (
-          <div className="text-xs text-muted-foreground">当前所在文件夹: {selectedFolderName}</div>
+          <div className="text-xs text-muted-foreground">当前所在文件夹：{selectedFolderName}</div>
         ) : (
           <div className="text-xs text-muted-foreground">当前会话位于未归类。</div>
         )}
