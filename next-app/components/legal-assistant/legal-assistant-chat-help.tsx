@@ -20,12 +20,12 @@ type ShortcutItem = {
 
 const HELP_ITEMS: ShortcutItem[] = [
   { label: "打开帮助面板", shortcut: "/" },
-  { label: "命令面板", shortcut: "Ctrl / Cmd + K" },
-  { label: "打开设置", shortcut: "Ctrl / Cmd + I" },
-  { label: "新建会话", shortcut: "Ctrl / Cmd + P" },
-  { label: "发送消息", shortcut: "Enter" },
-  { label: "换行", shortcut: "Shift + Enter" },
-  { label: "关闭弹层", shortcut: "Esc" },
+  { label: "命令面板", shortcut: "⌃/⌘ + K" },
+  { label: "打开设置", shortcut: "⌃/⌘ + I" },
+  { label: "新建会话", shortcut: "⌃/⌘ + P" },
+  { label: "发送消息", shortcut: "回车" },
+  { label: "换行", shortcut: "上档键 + 回车" },
+  { label: "关闭弹层", shortcut: "退出键" },
 ];
 
 function isTypingTarget(target: EventTarget | null) {

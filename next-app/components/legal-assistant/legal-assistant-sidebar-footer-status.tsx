@@ -18,7 +18,7 @@ export function LegalAssistantSidebarFooterStatus({
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="truncate text-xs font-medium uppercase tracking-[0.1em] text-sidebar-foreground/60">Session</div>
+        <div className="truncate text-xs font-medium tracking-[0.1em] text-sidebar-foreground/60">会话状态</div>
         <div className="truncate text-xs text-sidebar-foreground/80">{statusText}</div>
       </div>
     </div>

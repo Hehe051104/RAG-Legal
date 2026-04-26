@@ -51,7 +51,7 @@ export function QuickSettings() {
               <PlusIcon className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>新建会话 (Ctrl/Cmd + P)</TooltipContent>
+          <TooltipContent>新建会话（⌃/⌘ + P）</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -83,7 +83,7 @@ export function QuickSettings() {
               <Settings2Icon className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>打开设置 (Ctrl/Cmd + I)</TooltipContent>
+          <TooltipContent>打开设置（⌃/⌘ + I）</TooltipContent>
         </Tooltip>
 
         <div className="hidden max-w-[170px] truncate rounded-md border border-border/50 px-2 py-1 text-[11px] text-muted-foreground lg:block">

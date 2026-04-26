@@ -8,7 +8,7 @@ export function LegalAssistantChatEmptyState() {
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[11px] text-muted-foreground shadow-[var(--shadow-card)]">
           <ScaleIcon className="size-3.5" />
-          Legal Assistant Workspace
+          法律助手工作区
         </div>
 
         <h2 className="font-semibold text-2xl tracking-tight text-foreground md:text-3xl">

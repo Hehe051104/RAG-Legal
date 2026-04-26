@@ -11,7 +11,7 @@ export function LegalAssistantSidebarHeaderBrand() {
 
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold leading-5">法律助手</div>
-        <div className="truncate text-xs text-sidebar-foreground/55 leading-5">ChatUI compatible shell</div>
+        <div className="truncate text-xs text-sidebar-foreground/55 leading-5">聊天界面兼容外壳</div>
       </div>
     </div>
   );
