@@ -51,72 +51,75 @@ export const LEGAL_ASSISTANT_CHAT_ENDPOINT =
   process.env.NEXT_PUBLIC_LEGAL_ASSISTANT_API_URL?.trim() ||
   getApiUrl("/api/chat");
 
+const TEXT_KEYS = ["data", "delta", "text", "content", "answer", "message", "response"] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function normalizeChunkText(text: string): string {
+  return text.trim();
+}
+
 function extractTextFromUnknownPayload(payload: unknown): string {
   if (typeof payload === "string") {
     return payload;
   }
 
-  if (!payload || typeof payload !== "object") {
+  if (!isRecord(payload)) {
     return "";
   }
 
-  const record = payload as Record<string, unknown>;
-
-  const directTextKeys = ["data", "delta", "text", "content", "answer", "message", "response"];
-  for (const key of directTextKeys) {
-    const value = record[key];
+  for (const key of TEXT_KEYS) {
+    const value = payload[key];
     if (typeof value === "string" && value.trim()) {
       return value;
     }
   }
 
-  if (Array.isArray(record.data)) {
-    const nested = record.data.map(extractTextFromUnknownPayload).join("");
+  const dataValue = payload.data;
+  if (Array.isArray(dataValue)) {
+    const nested = dataValue.map((item) => extractTextFromUnknownPayload(item)).join("");
     if (nested.trim()) {
       return nested;
     }
   }
 
-  if (Array.isArray(record.parts)) {
-    const nested = record.parts
-      .map((part) => extractTextFromUnknownPayload(part))
-      .join("");
+  const partsValue = payload.parts;
+  if (Array.isArray(partsValue)) {
+    const nested = partsValue.map((item) => extractTextFromUnknownPayload(item)).join("");
     if (nested.trim()) {
       return nested;
     }
   }
 
-  if (Array.isArray(record.choices)) {
-    for (const choice of record.choices) {
-      if (!choice || typeof choice !== "object") {
+  const choicesValue = payload.choices;
+  if (Array.isArray(choicesValue)) {
+    for (const choice of choicesValue) {
+      if (!isRecord(choice)) {
         continue;
       }
 
-      const choiceRecord = choice as Record<string, unknown>;
-      const deltaText = extractTextFromUnknownPayload(choiceRecord.delta);
+      const deltaText = extractTextFromUnknownPayload(choice.delta);
       if (deltaText.trim()) {
         return deltaText;
       }
 
-      const messageText = extractTextFromUnknownPayload(choiceRecord.message);
+      const messageText = extractTextFromUnknownPayload(choice.message);
       if (messageText.trim()) {
         return messageText;
       }
     }
   }
 
-  if (record.data && typeof record.data === "object") {
-    const nested = extractTextFromUnknownPayload(record.data);
-    if (nested.trim()) {
-      return nested;
-    }
+  const nestedData = extractTextFromUnknownPayload(payload.data);
+  if (nestedData.trim()) {
+    return nestedData;
   }
 
-  if (record.message && typeof record.message === "object") {
-    const nested = extractTextFromUnknownPayload(record.message);
-    if (nested.trim()) {
-      return nested;
-    }
+  const nestedMessage = extractTextFromUnknownPayload(payload.message);
+  if (nestedMessage.trim()) {
+    return nestedMessage;
   }
 
   return "";
@@ -168,14 +171,13 @@ async function getErrorMessageFromResponse(response: Response): Promise<string> 
         return extracted;
       }
 
-      if (parsed && typeof parsed === "object") {
-        const record = parsed as Record<string, unknown>;
-        const message = record.message;
+      if (isRecord(parsed)) {
+        const message = parsed.message;
         if (typeof message === "string" && message.trim()) {
           return message;
         }
 
-        const error = record.error;
+        const error = parsed.error;
         if (typeof error === "string" && error.trim()) {
           return error;
         }
@@ -194,7 +196,7 @@ function appendStreamPayload(
   payload: string,
   onDelta: (delta: string) => void,
 ): string {
-  const trimmed = payload.trim();
+  const trimmed = normalizeChunkText(payload);
   if (!trimmed || trimmed === "[DONE]") {
     return "";
   }
@@ -215,6 +217,28 @@ function appendStreamPayload(
   return trimmed;
 }
 
+function parseJsonContent(json: unknown, onDelta: (delta: string) => void): string {
+  const extracted = extractTextFromUnknownPayload(json).trim();
+  if (extracted) {
+    onDelta(extracted);
+    return extracted;
+  }
+
+  if (isRecord(json)) {
+    const nested = [json.data, json.message, json.response]
+      .map((item) => extractTextFromUnknownPayload(item))
+      .join("")
+      .trim();
+
+    if (nested) {
+      onDelta(nested);
+      return nested;
+    }
+  }
+
+  return "";
+}
+
 export async function readChatResponse(
   response: Response,
   onDelta: (delta: string) => void,
@@ -223,26 +247,7 @@ export async function readChatResponse(
 
   if (contentType.includes("application/json")) {
     const json = (await response.json()) as unknown;
-    const extracted = extractTextFromUnknownPayload(json).trim();
-    if (extracted) {
-      onDelta(extracted);
-      return extracted;
-    }
-
-    if (json && typeof json === "object") {
-      const record = json as Record<string, unknown>;
-      const nested = [record.data, record.message, record.response]
-        .map((item) => extractTextFromUnknownPayload(item))
-        .join("")
-        .trim();
-
-      if (nested) {
-        onDelta(nested);
-        return nested;
-      }
-    }
-
-    return "";
+    return parseJsonContent(json, onDelta);
   }
 
   if (!response.body) {

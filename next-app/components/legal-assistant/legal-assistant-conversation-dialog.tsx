@@ -5,36 +5,47 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+type LegalAssistantConversationDialogProps = {
+  open: boolean;
+  draft: string;
+  setDraft: (value: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+};
+
 export function LegalAssistantConversationDialog({
   open,
   draft,
   setDraft,
   onClose,
   onSubmit,
-}: {
-  open: boolean;
-  draft: string;
-  setDraft: (value: string) => void;
-  onClose: () => void;
-  onSubmit: () => void;
-}) {
+}: LegalAssistantConversationDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? null : onClose())}>
-      <DialogContent>
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+      open={open}
+    >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>重命名对话</DialogTitle>
-          <DialogDescription>修改当前对话显示名称。</DialogDescription>
+          <DialogDescription>更新当前会话标题，便于在侧栏快速检索。</DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
+
+        <div className="space-y-2 py-1">
           <Label htmlFor="conversation-title">对话标题</Label>
-          <Input autoFocus id="conversation-title" value={draft} onChange={(event) => setDraft(event.target.value)} />
+          <Input autoFocus className="h-10" id="conversation-title" onChange={(event) => setDraft(event.target.value)} value={draft} />
         </div>
+
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button onClick={onClose} type="button" variant="outline">
             取消
           </Button>
-          <Button type="button" onClick={onSubmit}>
-            保存
+          <Button onClick={onSubmit} type="button">
+            确认
           </Button>
         </DialogFooter>
       </DialogContent>

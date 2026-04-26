@@ -1,11 +1,23 @@
 "use client";
 
-import { MenuIcon } from "lucide-react";
+import { PanelLeftIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { LegalAssistantChatHeaderActions } from "./legal-assistant-chat-header-actions";
 import { LegalAssistantChatHeaderTitle } from "./legal-assistant-chat-header-title";
+
+type LegalAssistantChatHeaderProps = {
+  isSidebarOpen: boolean;
+  onOpenSidebar: () => void;
+  title: string;
+  selectedFolderName: string | null;
+  modelLabel: string;
+};
+
+function resolveHeaderTitle(title: string) {
+  return title.trim() || "法律助手";
+}
 
 export function LegalAssistantChatHeader({
   isSidebarOpen,
@@ -13,24 +25,30 @@ export function LegalAssistantChatHeader({
   title,
   selectedFolderName,
   modelLabel,
-}: {
-  isSidebarOpen: boolean;
-  onOpenSidebar: () => void;
-  title: string;
-  selectedFolderName: string | null;
-  modelLabel: string;
-}) {
+}: LegalAssistantChatHeaderProps) {
   return (
-    <header className="relative flex min-h-[50px] items-center justify-center border-b-2 border-border/60 bg-secondary px-2 font-bold md:px-4">
+    <header className="sticky top-0 flex h-14 items-center gap-2 border-b border-border/50 bg-sidebar px-3">
       {!isSidebarOpen ? (
-        <Button className="absolute left-2 top-1 size-9 rounded-full md:hidden" onClick={onOpenSidebar} size="icon-sm" variant="ghost" type="button">
-          <MenuIcon className="size-4" />
+        <Button
+          aria-label="打开侧栏"
+          className="md:hidden"
+          onClick={onOpenSidebar}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <PanelLeftIcon className="size-4" />
         </Button>
       ) : null}
 
-      <div className="flex w-full items-center justify-center">
-        <LegalAssistantChatHeaderTitle modelLabel={modelLabel} selectedFolderName={selectedFolderName} title={title} />
+      <div className="min-w-0 flex-1">
+        <LegalAssistantChatHeaderTitle
+          modelLabel={modelLabel}
+          selectedFolderName={selectedFolderName}
+          title={resolveHeaderTitle(title)}
+        />
       </div>
+
       <LegalAssistantChatHeaderActions />
     </header>
   );

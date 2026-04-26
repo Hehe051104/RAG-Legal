@@ -4,6 +4,16 @@ import { cn } from "@/lib/utils";
 
 import { LegalAssistantSidebarItemActions } from "./legal-assistant-sidebar-item-actions";
 
+type LegalAssistantSidebarItemProps = {
+  conversationId: string;
+  title: string;
+  preview: string;
+  isActive: boolean;
+  onSelect: (conversationId: string) => void;
+  onRename: (conversationId: string) => void;
+  onDelete: (conversationId: string) => void;
+};
+
 export function LegalAssistantSidebarItem({
   conversationId,
   title,
@@ -12,26 +22,36 @@ export function LegalAssistantSidebarItem({
   onSelect,
   onRename,
   onDelete,
-}: {
-  conversationId: string;
-  title: string;
-  preview: string;
-  isActive: boolean;
-  onSelect: (conversationId: string) => void;
-  onRename: (conversationId: string) => void;
-  onDelete: (conversationId: string) => void;
-}) {
+}: LegalAssistantSidebarItemProps) {
+  const handleSelect = () => {
+    onSelect(conversationId);
+  };
+
   return (
     <div
       className={cn(
-        "group flex w-full cursor-pointer items-center rounded p-2 transition-colors hover:bg-sidebar-accent hover:opacity-50 focus:bg-sidebar-accent focus:outline-none",
-        isActive && "bg-sidebar-accent",
+        "group flex w-full items-center rounded-md px-2 py-1.5 text-sidebar-foreground/75 transition-colors duration-150",
+        isActive
+          ? "bg-sidebar-accent/60 text-sidebar-foreground"
+          : "hover:bg-sidebar-accent/40 hover:text-sidebar-foreground",
       )}
+      onClick={handleSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
-      <button className="min-w-0 flex-1 text-left" onClick={() => onSelect(conversationId)} type="button">
-        <div className="truncate text-sm font-semibold">{title}</div>
-        <div className="truncate text-xs text-sidebar-foreground/55">{preview || "暂无消息"}</div>
-      </button>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] font-medium leading-5">{title}</div>
+        <div className="truncate text-[11px] text-sidebar-foreground/55 leading-5">
+          {preview || "暂无消息"}
+        </div>
+      </div>
+
       <LegalAssistantSidebarItemActions conversationId={conversationId} onDelete={onDelete} onRename={onRename} />
     </div>
   );

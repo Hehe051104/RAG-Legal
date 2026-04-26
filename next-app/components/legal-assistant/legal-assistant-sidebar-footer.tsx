@@ -1,24 +1,33 @@
 "use client";
 
-import { WrenchIcon } from "lucide-react";
+import { Settings2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { LegalAssistantSidebarFooterStatus } from "./legal-assistant-sidebar-footer-status";
 
+type LegalAssistantSidebarFooterProps = {
+  messageCount: number | null;
+  onOpenSettings: () => void;
+};
+
 export function LegalAssistantSidebarFooter({
   messageCount,
   onOpenSettings,
-}: {
-  messageCount: number | null;
-  onOpenSettings: () => void;
-}) {
+}: LegalAssistantSidebarFooterProps) {
   return (
-    <div className="border-t-2 border-sidebar-border/70 p-3">
-      <div className="flex items-center gap-3">
+    <div className="border-t border-sidebar-border/70 px-2 pb-2 pt-2">
+      <div className="flex items-center gap-2">
         <LegalAssistantSidebarFooterStatus messageCount={messageCount} />
-        <Button className="size-9 rounded-full" onClick={onOpenSettings} size="icon-sm" variant="ghost" type="button">
-          <WrenchIcon className="size-4" />
+        <Button
+          aria-label="打开设置"
+          className="size-8 rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          onClick={onOpenSettings}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+        >
+          <Settings2Icon className="size-4" />
         </Button>
       </div>
     </div>

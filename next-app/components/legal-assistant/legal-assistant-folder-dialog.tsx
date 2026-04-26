@@ -5,6 +5,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+type LegalAssistantFolderDialogProps = {
+  open: boolean;
+  mode: "create" | "rename";
+  draft: string;
+  setDraft: (value: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+};
+
 export function LegalAssistantFolderDialog({
   open,
   mode,
@@ -12,31 +21,33 @@ export function LegalAssistantFolderDialog({
   setDraft,
   onClose,
   onSubmit,
-}: {
-  open: boolean;
-  mode: "create" | "rename";
-  draft: string;
-  setDraft: (value: string) => void;
-  onClose: () => void;
-  onSubmit: () => void;
-}) {
+}: LegalAssistantFolderDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? null : onClose())}>
-      <DialogContent>
+    <Dialog
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+      open={open}
+    >
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "新建文件夹" : "重命名文件夹"}</DialogTitle>
-          <DialogDescription>输入一个新的文件夹名称。</DialogDescription>
+          <DialogTitle>{mode === "create" ? "创建文件夹" : "重命名文件夹"}</DialogTitle>
+          <DialogDescription>用于组织会话列表，名称会立即同步到侧栏。</DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
+
+        <div className="space-y-2 py-1">
           <Label htmlFor="folder-name">文件夹名称</Label>
-          <Input autoFocus id="folder-name" value={draft} onChange={(event) => setDraft(event.target.value)} />
+          <Input autoFocus className="h-10" id="folder-name" onChange={(event) => setDraft(event.target.value)} value={draft} />
         </div>
+
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button onClick={onClose} type="button" variant="outline">
             取消
           </Button>
-          <Button type="button" onClick={onSubmit}>
-            保存
+          <Button onClick={onSubmit} type="button">
+            确认
           </Button>
         </DialogFooter>
       </DialogContent>

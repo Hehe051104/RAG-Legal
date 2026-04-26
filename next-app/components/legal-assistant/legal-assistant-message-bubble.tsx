@@ -1,6 +1,10 @@
 "use client";
 
+import { CopyIcon } from "lucide-react";
+
 import { MessageResponse } from "@/components/ai-elements/message";
+import { SparklesIcon } from "@/components/chat/icons";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function formatTimestamp(iso: string) {
@@ -13,72 +17,84 @@ function formatTimestamp(iso: string) {
       }).format(date);
 }
 
+type LegalAssistantMessageBubbleProps = {
+  role: "user" | "assistant";
+  content: string;
+  status?: "streaming" | "done" | "error";
+  isError?: boolean;
+  createdAt: string;
+};
+
 export function LegalAssistantMessageBubble({
   role,
   content,
   status,
   isError,
   createdAt,
-}: {
-  role: "user" | "assistant";
-  content: string;
-  status?: "streaming" | "done" | "error";
-  isError?: boolean;
-  createdAt: string;
-}) {
+}: LegalAssistantMessageBubbleProps) {
   const isUser = role === "user";
+  const timestamp = formatTimestamp(createdAt);
+  const showStreaming = !isUser && !content && status === "streaming";
 
   return (
-    <div className={cn("flex w-full justify-center", isUser ? "" : "bg-secondary")}> 
-      <div className="relative flex w-full flex-col p-6 sm:w-[550px] sm:px-0 md:w-[650px] lg:w-[650px] xl:w-[700px]">
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3">
-            <div
-              className={cn(
-                "size-8 rounded-full border p-1",
-                isUser ? "border-border bg-background text-foreground" : "border-primary bg-primary text-primary-foreground",
-                isError && !isUser ? "border-destructive bg-destructive text-destructive-foreground" : "",
-              )}
+    <div className="group/message w-full">
+      <div className={cn(isUser ? "flex flex-col items-end gap-2" : "flex items-start gap-3")}>
+        {!isUser ? (
+          <div className="flex h-[calc(13px*1.65)] shrink-0 items-center">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border/50">
+              <SparklesIcon size={13} />
+            </div>
+          </div>
+        ) : null}
+
+        <div className={cn("relative min-w-0", isUser ? "max-w-[min(80%,56ch)]" : "flex-1")}>
+          <div className="absolute -top-1 right-0 opacity-0 transition-opacity group-hover/message:opacity-100">
+            <Button
+              aria-label="复制消息"
+              className="size-7 rounded-md text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                if (typeof navigator !== "undefined" && navigator.clipboard) {
+                  void navigator.clipboard.writeText(content);
+                }
+              }}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
             >
-              <span className="flex h-full w-full items-center justify-center text-[10px] font-semibold">
-                {isUser ? "你" : "AI"}
-              </span>
-            </div>
-
-            <div className="font-semibold">{isUser ? "你" : "助手"}</div>
-
-            <div className="ml-auto text-[11px] uppercase tracking-[0.12em] text-muted-foreground/70">
-              {formatTimestamp(createdAt)}
-            </div>
+              <CopyIcon className="size-3.5" />
+            </Button>
           </div>
 
-          <div
-            className={cn(
-              "rounded-3xl border px-4 py-3 text-sm leading-7 shadow-sm",
-              isUser
-                ? "border-transparent bg-foreground text-background"
-                : isError
-                  ? "border-destructive/25 bg-destructive/10 text-destructive"
-                  : "border-border/60 bg-card text-card-foreground",
-            )}
-          >
-            {isUser ? (
-              <p className="whitespace-pre-wrap">{content}</p>
-            ) : content ? (
-              <MessageResponse className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-pre:my-2 dark:prose-invert">
-                {content}
-              </MessageResponse>
-            ) : status === "streaming" ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="size-2 rounded-full bg-current animate-pulse" />
-                <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:150ms]" />
-                <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:300ms]" />
-                <span className="text-xs">正在生成回复…</span>
-              </div>
-            ) : (
-              <p className="whitespace-pre-wrap">{content}</p>
-            )}
-          </div>
+          {isUser ? (
+            <div className="w-fit overflow-hidden break-words rounded-2xl rounded-br-lg border border-border/30 bg-gradient-to-br from-secondary to-muted px-3.5 py-2 shadow-[var(--shadow-card)]">
+              <p className="whitespace-pre-wrap text-[13px] leading-[1.65]">{content}</p>
+            </div>
+          ) : (
+            <div className={cn("text-[13px] leading-[1.65]", isError ? "text-destructive" : "text-foreground")}>
+              {content ? (
+                <MessageResponse className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-pre:my-2 dark:prose-invert">
+                  {content}
+                </MessageResponse>
+              ) : null}
+
+              {showStreaming ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="size-2 rounded-full bg-current animate-pulse" />
+                  <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:150ms]" />
+                  <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:300ms]" />
+                  <span className="text-xs">正在生成回复...</span>
+                </div>
+              ) : null}
+
+              {!content && !showStreaming ? <p className="whitespace-pre-wrap">{content}</p> : null}
+            </div>
+          )}
+
+          {timestamp ? (
+            <div className={cn("mt-1 text-[10px] text-muted-foreground/70", isUser ? "text-right" : "text-left")}>
+              {timestamp}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

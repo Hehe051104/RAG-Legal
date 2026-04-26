@@ -1,6 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+
+type FolderDialogState = {
+  mode: "create" | "rename";
+  folderId?: string;
+};
+
+type ConversationInfo = { id: string; title: string };
+type FolderInfo = { id: string; name: string };
+
+type UseLegalAssistantChatDialogsProps = {
+  conversations: ConversationInfo[];
+  folders: FolderInfo[];
+  createFolder: (name: string) => void;
+  renameFolder: (folderId: string, name: string) => void;
+  renameConversation: (conversationId: string, name: string) => void;
+};
+
+const DEFAULT_FOLDER_NAME = "新文件夹";
+const DEFAULT_CONVERSATION_NAME = "新对话";
+
+function normalizeDraftValue(value: string, fallback: string) {
+  const trimmed = value.trim();
+  return trimmed || fallback;
+}
 
 export function useLegalAssistantChatDialogs({
   conversations,
@@ -8,86 +32,91 @@ export function useLegalAssistantChatDialogs({
   createFolder,
   renameFolder,
   renameConversation,
-}: {
-  conversations: Array<{ id: string; title: string }>;
-  folders: Array<{ id: string; name: string }>;
-  createFolder: (name: string) => void;
-  renameFolder: (folderId: string, name: string) => void;
-  renameConversation: (conversationId: string, name: string) => void;
-}) {
-  const [folderDialog, setFolderDialog] = useState<{ mode: "create" | "rename"; folderId?: string } | null>(null);
+}: UseLegalAssistantChatDialogsProps) {
+  const [folderDialog, setFolderDialog] = useState<FolderDialogState | null>(null);
   const [folderDraft, setFolderDraft] = useState("");
   const [conversationDialog, setConversationDialog] = useState<string | null>(null);
   const [conversationDraft, setConversationDraft] = useState("");
 
-  const openFolderCreateDialog = () => {
-    setFolderDialog({ mode: "create" });
-    setFolderDraft("");
-  };
+  const folderById = useMemo(() => {
+    return new Map(folders.map((folder) => [folder.id, folder]));
+  }, [folders]);
 
-  const openFolderRenameDialog = (folderId: string) => {
-    const folder = folders.find((item) => item.id === folderId);
+  const conversationById = useMemo(() => {
+    return new Map(conversations.map((conversation) => [conversation.id, conversation]));
+  }, [conversations]);
+
+  const resetFolderDialog = useCallback(() => {
+    setFolderDialog(null);
+    setFolderDraft("");
+  }, []);
+
+  const resetConversationDialog = useCallback(() => {
+    setConversationDialog(null);
+    setConversationDraft("");
+  }, []);
+
+  const openFolderCreateDialog = useCallback(() => {
+    setFolderDialog({ mode: "create" });
+    setFolderDraft(DEFAULT_FOLDER_NAME);
+  }, []);
+
+  const openFolderRenameDialog = useCallback((folderId: string) => {
+    const folder = folderById.get(folderId);
     if (!folder) {
       return;
     }
 
     setFolderDialog({ mode: "rename", folderId });
     setFolderDraft(folder.name);
-  };
+  }, [folderById]);
 
-  const openConversationRenameDialog = (conversationId: string) => {
-    const conversation = conversations.find((item) => item.id === conversationId);
+  const openConversationRenameDialog = useCallback((conversationId: string) => {
+    const conversation = conversationById.get(conversationId);
     if (!conversation) {
       return;
     }
 
     setConversationDialog(conversationId);
     setConversationDraft(conversation.title);
-  };
+  }, [conversationById]);
 
-  const submitFolderDialog = () => {
+  const submitFolderDialog = useCallback(() => {
     if (!folderDialog) {
       return;
     }
 
-    const value = folderDraft.trim();
+    const value = normalizeDraftValue(folderDraft, DEFAULT_FOLDER_NAME);
+
     if (folderDialog.mode === "create") {
-      createFolder(value || "新文件夹");
+      createFolder(value);
     } else if (folderDialog.folderId) {
-      renameFolder(folderDialog.folderId, value || "新文件夹");
+      renameFolder(folderDialog.folderId, value);
     }
 
-    setFolderDialog(null);
-    setFolderDraft("");
-  };
+    resetFolderDialog();
+  }, [createFolder, folderDialog, folderDraft, renameFolder, resetFolderDialog]);
 
-  const submitConversationDialog = () => {
+  const submitConversationDialog = useCallback(() => {
     if (!conversationDialog) {
       return;
     }
 
-    renameConversation(conversationDialog, conversationDraft.trim() || "新对话");
-    setConversationDialog(null);
-    setConversationDraft("");
-  };
+    renameConversation(
+      conversationDialog,
+      normalizeDraftValue(conversationDraft, DEFAULT_CONVERSATION_NAME),
+    );
 
-  const closeFolderDialog = () => {
-    setFolderDialog(null);
-    setFolderDraft("");
-  };
-
-  const closeConversationDialog = () => {
-    setConversationDialog(null);
-    setConversationDraft("");
-  };
+    resetConversationDialog();
+  }, [conversationDialog, conversationDraft, renameConversation, resetConversationDialog]);
 
   return {
-    conversationDialog,
-    conversationDraft,
-    closeConversationDialog,
     folderDialog,
     folderDraft,
-    closeFolderDialog,
+    conversationDialog,
+    conversationDraft,
+    closeConversationDialog: resetConversationDialog,
+    closeFolderDialog: resetFolderDialog,
     openConversationRenameDialog,
     openFolderCreateDialog,
     openFolderRenameDialog,

@@ -1,26 +1,58 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
+
 import { LegalAssistantDashboard } from "./legal-assistant-dashboard";
 import { useHome } from "./home-context";
 import { useLegalAssistantChatDialogs } from "./use-legal-assistant-chat-dialogs";
 
+function resolveConversationTitle(title: string | undefined) {
+  return title?.trim() || "法律助手";
+}
+
 export function LegalAssistantChat() {
   const {
+    createFolder,
+    deleteFolder,
     conversations,
-    selectedConversation,
+    folders,
     isSending,
     isSideBarOpen,
-    setSideBarOpen,
-    selectedFolder,
-    renameConversation,
-    deleteConversation,
-    createFolder,
-    renameFolder,
-    deleteFolder,
     modelId,
-    folders,
+    renameConversation,
+    renameFolder,
+    selectedConversation,
+    selectedFolder,
     sendMessage,
+    setSideBarOpen,
+    deleteConversation,
   } = useHome();
+
+  const selectedMessages = useMemo(
+    () => selectedConversation?.messages ?? [],
+    [selectedConversation?.messages],
+  );
+
+  const selectedFolderName = useMemo(
+    () => selectedFolder?.name ?? null,
+    [selectedFolder?.name],
+  );
+
+  const conversationTitle = useMemo(
+    () => resolveConversationTitle(selectedConversation?.title),
+    [selectedConversation?.title],
+  );
+
+  const handleQuickPrompt = useCallback(
+    (prompt: string) => {
+      void sendMessage(prompt);
+    },
+    [sendMessage],
+  );
+
+  const handleOpenSidebar = useCallback(() => {
+    setSideBarOpen(true);
+  }, [setSideBarOpen]);
 
   const {
     conversationDialog,
@@ -53,7 +85,7 @@ export function LegalAssistantChat() {
       folderDraft={folderDraft}
       isSending={isSending}
       isSidebarOpen={isSideBarOpen}
-      messages={selectedConversation?.messages ?? []}
+      messages={selectedMessages}
       modelLabel={modelId}
       onConversationDelete={deleteConversation}
       onConversationDialogClose={closeConversationDialog}
@@ -64,14 +96,12 @@ export function LegalAssistantChat() {
       onFolderDialogClose={closeFolderDialog}
       onFolderDialogSubmit={submitFolderDialog}
       onFolderEdit={openFolderRenameDialog}
-      onOpenSidebar={() => setSideBarOpen(true)}
-      onQuickPrompt={(prompt) => {
-        void sendMessage(prompt);
-      }}
-      selectedFolderName={selectedFolder?.name ?? null}
+      onOpenSidebar={handleOpenSidebar}
+      onQuickPrompt={handleQuickPrompt}
+      selectedFolderName={selectedFolderName}
       setConversationDraft={setConversationDraft}
       setFolderDraft={setFolderDraft}
-      title={selectedConversation?.title ?? "法律助手"}
+      title={conversationTitle}
     />
   );
 }
