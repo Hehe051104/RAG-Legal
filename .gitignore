@@ -1,7 +1,6 @@
 .env
 __pycache__/
 *.pyc
-app.db
 node_modules/
 .next/
 dist/
