@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nslookup api.hehe051104.me)",
+      "Bash(curl -v --connect-timeout 5 https://api.hehe051104.me)"
+    ]
+  }
+}
