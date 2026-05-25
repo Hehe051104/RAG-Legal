@@ -6,3 +6,4 @@ node_modules/
 .next/
 dist/
 package-lock.json
+legal_vector_db/

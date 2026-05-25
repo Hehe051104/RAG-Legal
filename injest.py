@@ -80,4 +80,4 @@ def run_ingestion(json_path,db_path,collection_name,model_name):
         )
         print(f"进度: {min(end_idx, len(documents))}/{len(documents)}")
 
-    print(f"✅ 成功！数据库已保存在: {os.path.abspath(db_path)}")
+    print(f"[OK] 数据库已保存在: {os.path.abspath(db_path)}")
