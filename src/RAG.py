@@ -202,23 +202,23 @@ def rewrite_query(user_query, history, model_name):
         return user_query
 
 def call_ollama_rag(query_text, retrieved_docs,history,model_name):
-    context = “”
+    context = ""
     for i, item in enumerate(retrieved_docs):
         meta = item['metadata']
         content = item['content']
         source = meta.get('source', '未知来源')
         doc_type = meta.get('doc_type', 'law')
-        levels = [meta.get(“book”, “”), meta.get(“subbook”, “”),
-                  meta.get(“chapter”, “”), meta.get(“section”, “”)]
-        path = f'{source} >' + “ > “.join([l for l in levels if l])
+        levels = [meta.get("book", ""), meta.get("subbook", ""),
+              meta.get("chapter", ""), meta.get("section", "")]
+        path = f"{source} >" + " > ".join([l for l in levels if l])
 
         # 标注文档类型
-        type_label = {“law”: “法律条文”, “interpretation”: “司法解释”, “case”: “案例”}.get(doc_type, “法律依据”)
-        context += f”【{i+1}】[{type_label}] 来源：{path} > {meta['article_number']}\n原文：{content}\n\n”
+        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "法律依据")
+        context += f"【{i+1}】[{type_label}] 来源：{path} > {meta['article_number']}\n原文：{content}\n\n"
 
     # 保持原有”最近三轮上下文”的语义，按消息数约等于最近 6 条
     history_context = _history_to_prompt_text(history, max_messages=10)
-    prompt = f”””你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
+    prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
 
 【IRAC分析框架】：
 - Issue（法律争点）：识别用户问题中的核心法律争议点
@@ -262,9 +262,9 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 1. 如果用户在询问之前聊过的话题，请直接根据【对话历史】回答。
 2. 必须优先使用【法律依据】中的内容，不得编造法条。
 3. 如果法律依据不足，请如实告知并建议咨询专业律师。
-4. 引用法条时注明具体”条”和来源。
+4. 引用法条时注明具体"条"和来源。
 5. 保持专业、严谨的法律分析风格。
-“””
+"""
 
     # 调用 Ollama
     print(f" 正在链接本地 大语言模型: {model_name}")
