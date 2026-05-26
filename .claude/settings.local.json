@@ -19,7 +19,10 @@
       "Bash(D:anacondaenvsdrlpython.exe -c ' *)",
       "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\test_db.py\")",
       "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\build_vector_store.py\")",
-      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\test_search.py\")"
+      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\test_search.py\")",
+      "Bash(npx tsc *)",
+      "PowerShell(Get-Item *)",
+      "Bash(Select-String -NotMatch \"node_modules|__pycache__|\\\\.next|package-lock\")"
     ]
   }
 }

@@ -7,7 +7,8 @@ import { SparklesIcon } from "@/components/chat/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LegalReferenceCard } from "./legal-reference-card";
-import type { LegalReference } from "./api";
+import type { IracSections, LegalReference } from "./api";
+import { IracDisplay } from "./legal-assistant-irac-display";
 
 function formatTimestamp(iso: string) {
   const date = new Date(iso);
@@ -58,6 +59,7 @@ type LegalAssistantMessageBubbleProps = {
   role: "user" | "assistant";
   content: string;
   references?: LegalReference[];
+  irac?: IracSections;
   status?: "streaming" | "done" | "error";
   isError?: boolean;
   createdAt: string;
@@ -67,6 +69,7 @@ export function LegalAssistantMessageBubble({
   role,
   content,
   references,
+  irac,
   status,
   isError,
   createdAt,
@@ -115,6 +118,8 @@ export function LegalAssistantMessageBubble({
                   {content}
                 </MessageResponse>
               ) : null}
+
+              {irac ? <IracDisplay irac={irac} /> : null}
 
               {references && references.length > 0 ? (
                 <ReferencesByType references={references} />

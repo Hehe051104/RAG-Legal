@@ -18,6 +18,7 @@ import {
   buildChatRequestPayload,
   fetchAssistantErrorMessage,
   readChatResponse,
+  type IracSections,
   type LegalAssistantConversation,
   type LegalAssistantFolder,
   type LegalAssistantMessage,
@@ -122,6 +123,7 @@ type Action =
         messageId: string;
         content: string;
         references?: LegalReference[];
+        irac?: IracSections;
         isError?: boolean;
       };
     }
@@ -427,6 +429,7 @@ function reducer(state: HomeState, action: Action): HomeState {
                     ...message,
                     content: action.payload.content,
                     references: action.payload.references ?? message.references,
+                    irac: action.payload.irac ?? message.irac,
                     status: action.payload.isError ? "error" : "done",
                     isError: action.payload.isError ?? false,
                   }
@@ -680,6 +683,7 @@ export function HomeProvider({
             messageId: assistantMessageId,
             content: finalText,
             references: chatResult.references.length > 0 ? chatResult.references : undefined,
+            irac: chatResult.irac,
             isError: false,
           },
         });

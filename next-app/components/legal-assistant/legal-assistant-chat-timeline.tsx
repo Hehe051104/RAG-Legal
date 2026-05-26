@@ -4,7 +4,7 @@ import { LegalAssistantChatEmptyState } from "./legal-assistant-chat-empty-state
 import { LegalAssistantChatQuickPrompts } from "./legal-assistant-chat-quick-prompts";
 import { LegalAssistantChatSendingIndicator } from "./legal-assistant-chat-sending-indicator";
 import { LegalAssistantMessageBubble } from "./legal-assistant-message-bubble";
-import type { LegalReference } from "./api";
+import type { IracSections, LegalReference } from "./api";
 
 const quickPrompts = [
   "公司以末位淘汰为由辞退员工，是否合法？",
@@ -18,6 +18,7 @@ type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   references?: LegalReference[];
+  irac?: IracSections;
   createdAt: string;
   status?: "streaming" | "done" | "error";
   isError?: boolean;
@@ -43,6 +44,7 @@ export function LegalAssistantChatTimeline({
           <LegalAssistantMessageBubble
             content={message.content}
             references={message.references}
+            irac={message.irac}
             createdAt={message.createdAt}
             isError={message.isError}
             key={message.id}

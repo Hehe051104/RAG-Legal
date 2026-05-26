@@ -16,11 +16,19 @@ export type LegalReference = {
   method?: string;
 };
 
+export type IracSections = {
+  issue: string;
+  rule: string;
+  application: string;
+  conclusion: string;
+};
+
 export type LegalAssistantMessage = {
   id: string;
   role: LegalAssistantRole;
   content: string;
   references?: LegalReference[];
+  irac?: IracSections;
   createdAt: string;
   status?: "streaming" | "done" | "error";
   isError?: boolean;
@@ -212,7 +220,7 @@ async function getErrorMessageFromResponse(response: Response): Promise<string> 
 function appendStreamPayload(
   payload: string,
   onDelta: (delta: string) => void,
-): { text: string; references: LegalReference[] } {
+): ParsedContent {
   const trimmed = normalizeChunkText(payload);
   if (!trimmed || trimmed === "[DONE]") {
     return { text: "", references: [] };
@@ -221,7 +229,7 @@ function appendStreamPayload(
   try {
     const parsed = JSON.parse(trimmed) as unknown;
     const result = parseJsonContent(parsed, onDelta);
-    if (result.text) {
+    if (result.text || result.references.length > 0 || result.irac) {
       return result;
     }
   } catch {
@@ -260,16 +268,45 @@ function extractReferencesFromPayload(json: unknown): LegalReference[] {
   }));
 }
 
+function extractIracFromPayload(json: unknown): IracSections | undefined {
+  if (!isRecord(json)) {
+    return undefined;
+  }
+
+  const irac = json.irac;
+  if (!isRecord(irac)) {
+    return undefined;
+  }
+
+  const issue = typeof irac.issue === "string" ? irac.issue : "";
+  const rule = typeof irac.rule === "string" ? irac.rule : "";
+  const application = typeof irac.application === "string" ? irac.application : "";
+  const conclusion = typeof irac.conclusion === "string" ? irac.conclusion : "";
+
+  if (!issue && !rule && !application && !conclusion) {
+    return undefined;
+  }
+
+  return { issue, rule, application, conclusion };
+}
+
+type ParsedContent = {
+  text: string;
+  references: LegalReference[];
+  irac?: IracSections;
+};
+
 function parseJsonContent(
   json: unknown,
   onDelta: (delta: string) => void,
-): { text: string; references: LegalReference[] } {
+): ParsedContent {
   const references = extractReferencesFromPayload(json);
+  const irac = extractIracFromPayload(json);
 
   const extracted = extractTextFromUnknownPayload(json).trim();
   if (extracted) {
     onDelta(extracted);
-    return { text: extracted, references };
+    return { text: extracted, references, irac };
   }
 
   if (isRecord(json)) {
@@ -280,17 +317,17 @@ function parseJsonContent(
 
     if (nested) {
       onDelta(nested);
-      return { text: nested, references };
+      return { text: nested, references, irac };
     }
   }
 
-  return { text: "", references };
+  return { text: "", references, irac };
 }
 
 export async function readChatResponse(
   response: Response,
   onDelta: (delta: string) => void,
-): Promise<{ text: string; references: LegalReference[] }> {
+): Promise<{ text: string; references: LegalReference[]; irac?: IracSections }> {
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
@@ -308,6 +345,7 @@ export async function readChatResponse(
   let eventLines: string[] = [];
   let assistantText = "";
   let accumulatedReferences: LegalReference[] = [];
+  let accumulatedIrac: IracSections | undefined;
 
   const flushEvent = () => {
     if (!eventLines.length) {
@@ -320,6 +358,9 @@ export async function readChatResponse(
     assistantText += result.text;
     if (result.references.length > 0) {
       accumulatedReferences = result.references;
+    }
+    if (result.irac) {
+      accumulatedIrac = result.irac;
     }
   };
 
@@ -377,7 +418,7 @@ export async function readChatResponse(
     flushEvent();
   }
 
-  return { text: assistantText.trim(), references: accumulatedReferences };
+  return { text: assistantText.trim(), references: accumulatedReferences, irac: accumulatedIrac };
 }
 
 export async function fetchAssistantErrorMessage(response: Response): Promise<string> {

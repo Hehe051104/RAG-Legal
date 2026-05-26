@@ -342,7 +342,10 @@ class ChatRequest(BaseModel):
 
 class AuditResult(BaseModel):
     status: Literal["success", "need_clarify", "reject_non_legal", "rewrite"]
-    answer: str
+    issue: str = ""
+    rule: str = ""
+    application: str = ""
+    conclusion: str = ""
     reason: Optional[str] = None
 
 
@@ -419,6 +422,25 @@ def _extract_first_json(text: str) -> str | None:
 
 def _default_clarify_answer() -> str:
     return "您的问题描述较为模糊。为了准确匹配法律依据，请补充具体细节（如：纠纷起因、涉及的金额或具体的合同类型）。"
+
+
+def _build_answer_from_irac(audit: AuditResult) -> str:
+    """Combine IRAC sections into a single markdown answer."""
+    return (
+        f"## 一、法律争点（Issue）\n{audit.issue}\n\n"
+        f"## 二、法律规则（Rule）\n{audit.rule}\n\n"
+        f"## 三、适用分析（Application）\n{audit.application}\n\n"
+        f"## 四、结论（Conclusion）\n{audit.conclusion}"
+    )
+
+
+def _build_irac_dict(audit: AuditResult) -> dict:
+    return {
+        "issue": audit.issue,
+        "rule": audit.rule,
+        "application": audit.application,
+        "conclusion": audit.conclusion,
+    }
 
 # ==========================================
 # 核心对话接口
@@ -525,52 +547,51 @@ async def chat_endpoint(req: ChatRequest):
             return low_conf_payload
 
         # 5. 生成 + 审计合并为一次调用 (结构化 JSON 输出)
-        laws_context = "\n".join(
-            [
-                f"《{d['metadata'].get('source')}》{d['metadata'].get('article_number')}: {d['content']}"
-                for d in final_docs
-            ]
-        )
+        laws_context_parts = []
+        for i, d in enumerate(final_docs):
+            meta = d['metadata']
+            source = meta.get('source', '未知来源')
+            article = meta.get('article_number', '')
+            doc_type = meta.get('doc_type', 'law')
+            type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "指导案例"}.get(doc_type, "法律依据")
+            laws_context_parts.append(
+                f"【{i+1}】[{type_label}] 《{source}》{article}\n{d['content']}"
+            )
+        laws_context = "\n\n".join(laws_context_parts)
 
         audit_prompt = f"""
 你是一名资深法律顾问兼审计员，采用IRAC法律分析方法。请基于【用户提问】和【法律依据】给出专业法律分析，并用严格 JSON 输出。
 输出必须是单行 JSON，不要包含代码块或额外文本。
 
 JSON 格式：
-{{"status":"success|need_clarify|reject_non_legal|rewrite","answer":"...","reason":"..."}}
+{{"status":"success|need_clarify|reject_non_legal|rewrite","issue":"...","rule":"...","application":"...","conclusion":"...","reason":"..."}}
 
 规则：
-1. 若用户问题与法律无关 -> status=reject_non_legal，answer=固定拒答话术。
-2. 若问题过于模糊且需要补充 -> status=need_clarify，answer=澄清问题（<=300字）。
-3. 若需要纠正/重写以严格匹配法律依据 -> status=rewrite，answer=纠正后的最终回答。
-4. 其他情况 -> status=success，answer=最终回答。
+1. 若用户问题与法律无关 -> status=reject_non_legal，所有IRAC字段填空字符串。
+2. 若问题过于模糊且需要补充 -> status=need_clarify，issue/rule/application/conclusion填空，reason=澄清问题（<=300字）。
+3. 若需要纠正/重写以严格匹配法律依据 -> status=rewrite。
+4. 其他情况 -> status=success，完整填写所有IRAC字段。
 
-回答要求（Markdown格式，IRAC框架）：
-- 若 status=success，answer 必须包含以下结构：
+【IRAC各字段要求】（每个字段使用Markdown格式）：
 
-## 一、法律争点（Issue）
-明确指出用户问题中的核心法律争议点。
-
-## 二、法律规则（Rule）
-列出适用的法律条文、司法解释或案例：
-- 《法律名》第X条规定：...
-- 根据XX司法解释：...
-- 参考案例：...
-
-## 三、适用分析（Application）
-将法律规则与用户的具体情况进行分析：
-- 事实认定
-- 法律适用分析
-- 有利/不利因素分析
-
-## 四、结论（Conclusion）
-- 明确的法律意见
-- 具体建议
-- 风险提示
-
-⚠️ *本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。*
+- issue: 明确指出用户问题中的核心法律争议点，1-2句话。
+- rule: 列出适用的法律条文、司法解释和案例。格式：
+  * 《法律名》第X条："..."
+  * 司法解释：...
+  * ⚠️ **案例参考**：引用【法律依据】中标记为[指导案例]的内容。说明案例的裁判要点与当前问题的关联性。如果检索结果中有案例，必须引用至少一个。
+- application: 将法律规则与用户的具体情况进行分析：
+  * 事实认定
+  * 法律适用分析（结合法条+案例裁判逻辑）
+  * 有利/不利因素分析
+  * ⚠️ **案例对比**：与检索到的类似案例进行对比，说明相似之处和不同之处
+- conclusion:
+  * 明确的法律意见
+  * 具体建议（结合案例中的裁判倾向）
+  * 风险提示
 
 reason 用一句话说明判断依据。
+
+⚠️ *本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。*
 
 固定拒答话术："抱歉，我是一名法律助手，专注于法律咨询和依据查询。我无法为您提供烹饪、生活常识或其他非法律领域的建议。"
 
@@ -591,12 +612,33 @@ reason 用一句话说明判断依据。
         if not audit:
             print("⚠️ 审计 JSON 解析失败，启用降级策略")
             if raw_audit:
-                audit = AuditResult(status="success", answer=raw_audit, reason="fallback_raw_text")
+                audit = AuditResult(
+                    status="success",
+                    issue="",
+                    rule="",
+                    application="",
+                    conclusion=raw_audit,
+                    reason="fallback_raw_text",
+                )
             else:
-                audit = AuditResult(status="need_clarify", answer=_default_clarify_answer(), reason="fallback_empty")
+                fallback = _default_clarify_answer()
+                audit = AuditResult(
+                    status="need_clarify",
+                    issue="",
+                    rule="",
+                    application="",
+                    conclusion=fallback,
+                    reason="fallback_empty",
+                )
+
+        # Build combined markdown answer from IRAC sections
+        if audit.issue or audit.rule or audit.application:
+            combined_answer = _build_answer_from_irac(audit)
+        else:
+            combined_answer = audit.conclusion
 
         print("\n" + "-" * 30 + " 🤖 初始回答 " + "-" * 30)
-        print(audit.answer)
+        print(combined_answer)
         print(f"🧐 审计标签: {audit.status}")
 
         # -------------------- 逻辑分流处理 --------------------
@@ -604,7 +646,7 @@ reason 用一句话说明判断依据。
         # 1. 识别回答中的"索要信息/反问"信号
         clarify_signals = ["了解更多信息", "提供以下信息", "具体内容", "描述不清晰", "请您提供", "具体情况是什么",
                            "什么类型", "具体事实"]
-        model_is_asking = any(sig in audit.answer for sig in clarify_signals)
+        model_is_asking = any(sig in combined_answer for sig in clarify_signals)
 
         # 2. 识别用户提问是否过短 (启发式：短于8个字通常需要更多背景)
         query_is_vague = len(req.query) < 8
@@ -629,7 +671,7 @@ reason 用一句话说明判断依据。
         if audit.status == "need_clarify" or (model_is_asking and (query_is_vague or top_score < 0.5)):
             print(f"🔍 综合判定：满足澄清条件 (标签: {audit.status}, 提问极短: {query_is_vague}, 得分: {top_score:.2f})")
 
-            clarify_answer = audit.answer if len(audit.answer) < 300 else _default_clarify_answer()
+            clarify_answer = combined_answer if len(combined_answer) < 300 else _default_clarify_answer()
 
             if req.stream:
                 def clarify_sse():
@@ -668,8 +710,11 @@ reason 用一句话说明判断依据。
         print("📤 [API返回响应] 成功生成回答并附带溯源信息。")
         print("="*50 + "\n")
 
+        irac_data = _build_irac_dict(audit)
+
         response_payload = {
-            "answer": audit.answer,
+            "answer": combined_answer,
+            "irac": irac_data,
             "references": formatted_references,
             "status": "success",
             "metadata": {
@@ -683,14 +728,13 @@ reason 用一句话说明判断依据。
         if req.stream:
             def sse_generator():
                 # 逐字符发送 answer 内容
-                answer_text = audit.answer
-                chunk_size = 4  # 每次发送4个字符，模拟流式效果
-                for i in range(0, len(answer_text), chunk_size):
-                    chunk = answer_text[i:i + chunk_size]
+                chunk_size = 4
+                for i in range(0, len(combined_answer), chunk_size):
+                    chunk = combined_answer[i:i + chunk_size]
                     yield f"data: {json.dumps({'type': 'delta', 'content': chunk}, ensure_ascii=False)}\n\n"
 
-                # 最后发送完整的 references 和 metadata
-                yield f"data: {json.dumps({'type': 'done', 'references': formatted_references, 'status': 'success', 'metadata': response_payload['metadata']}, ensure_ascii=False)}\n\n"
+                # 最后发送完整的 references, irac 和 metadata
+                yield f"data: {json.dumps({'type': 'done', 'references': formatted_references, 'irac': irac_data, 'status': 'success', 'metadata': response_payload['metadata']}, ensure_ascii=False)}\n\n"
                 yield "[DONE]\n\n"
 
             return StreamingResponse(
