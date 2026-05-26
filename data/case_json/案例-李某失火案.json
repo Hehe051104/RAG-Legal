@@ -1,7 +1,6 @@
 [
     {
-        "id": "case_案例-李某失火案",
-        "article_number": "案例-李某失火案",
+        "id": "case_案例_李某失火案",
         "hierarchy": {
             "book": "",
             "subbook": "",

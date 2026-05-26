@@ -7,7 +7,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 
 class Config:
     # 数据库配置
-    DB_PATH = str(DATA_DIR / "legal_vector_db")
+    DB_PATH = str(DATA_DIR / "vector_store")
     COLLECTION_NAME = "china_law_library"
 
     # 模型配置

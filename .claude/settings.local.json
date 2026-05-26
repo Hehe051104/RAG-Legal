@@ -8,7 +8,18 @@
       "Bash(D:/anaconda/envs/drl/python.exe *)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "Bash(gh api *)"
+      "Bash(gh api *)",
+      "Bash(D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe -c \"import chromadb; print\\(chromadb.__version__\\)\")",
+      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" -c \"import chromadb; print\\(chromadb.__version__\\)\")",
+      "Bash(D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe scripts/process_and_ingest.py)",
+      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\process_and_ingest.py\")",
+      "Bash(timeout 30 tail -f \"C:\\\\Users\\\\14338\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--github-RAG--\\\\69e79ac6-be47-4158-a56c-5781e53fcbda\\\\tasks\\\\bvc8kdp1r.output\")",
+      "Bash(timeout 60 tail -f \"C:\\\\Users\\\\14338\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--github-RAG--\\\\69e79ac6-be47-4158-a56c-5781e53fcbda\\\\tasks\\\\bvc8kdp1r.output\")",
+      "PowerShell(Get-Process *)",
+      "Bash(D:anacondaenvsdrlpython.exe -c ' *)",
+      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\test_db.py\")",
+      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\build_vector_store.py\")",
+      "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\test_search.py\")"
     ]
   }
 }

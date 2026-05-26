@@ -1,6 +1,12 @@
 import json
 import os
 import torch
+
+# Disable Chroma telemetry to avoid incompatible telemetry client errors.
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
+os.environ.setdefault("CHROMA_TELEMETRY", "False")
+os.environ.setdefault("CHROMA_DISABLE_POSTHOG", "1")
+
 import chromadb
 from sentence_transformers import SentenceTransformer
 

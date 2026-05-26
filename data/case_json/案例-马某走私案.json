@@ -1,7 +1,6 @@
 [
     {
-        "id": "case_案例-马某走私案",
-        "article_number": "案例-马某走私案",
+        "id": "case_案例_马某走私案",
         "hierarchy": {
             "book": "",
             "subbook": "",

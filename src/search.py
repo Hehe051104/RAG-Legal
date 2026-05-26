@@ -1,7 +1,9 @@
-import torch
-import chromadb
-from sentence_transformers import SentenceTransformer
+import json
+import os
 import re
+import numpy as np
+import torch
+from sentence_transformers import SentenceTransformer
 
 
 # 兼容以下格式：
@@ -17,9 +19,9 @@ PRECISE_TAG_PATTERN = re.compile(
 # 2) 【（2023）最高法民申1234号】
 # 3) 【案例-张某故意杀人案】
 CASE_NUMBER_PATTERN = re.compile(
-    r'^(?:指导案例\s*)?(\d+)\s*号$|'  # 指导案例1号 或 1号
-    r'^[（(](\d{4})[）)](.+?)号$|'     # （2023）最高法民申1234号
-    r'^(案例-.+)$'                      # 案例-张某故意杀人案
+    r'^(?:指导案例\s*)?(\d+)\s*号$|'
+    r'^[（(](\d{4})[）)](.+?)号$|'
+    r'^(案例-.+)$'
 )
 
 
@@ -30,22 +32,17 @@ def parse_precise_tag(tag_text):
 
     text = tag_text.strip()
 
-    # 先尝试匹配案例号格式
     case_match = CASE_NUMBER_PATTERN.match(text)
     if case_match:
         if case_match.group(1):
-            # 指导案例X号
             case_num = f"指导案例{case_match.group(1)}号"
             return {'case_number': case_num}
         elif case_match.group(2):
-            # （2023）最高法民申1234号
             case_num = f"（{case_match.group(2)}）{case_match.group(3)}号"
             return {'case_number': case_num}
         elif case_match.group(4):
-            # 案例-张某故意杀人案
             return {'case_number': case_match.group(4)}
 
-    # 再尝试匹配法律条文格式
     match = PRECISE_TAG_PATTERN.match(text)
     if not match:
         return None
@@ -61,51 +58,86 @@ def parse_precise_tag(tag_text):
         'article_number': article_num,
     }
 
-# db_path = "./legal_vector_db"
-# collection_name = "china_civil_code"
-# model_name = "Qwen/Qwen3-Embedding-0.6B"
 
-_embedding_model_instance = None
-_chroma_client = None
+# --- Lazy-loaded globals ---
+_vector_store = None  # dict with keys: "embeddings", "documents", "metadata"
+_embedding_model = None
 
-# 优化,解决一次加载常驻内存 无需重复加载
-def get_resources(db_path, model_name):
-    """内部函数：确保数据库客户端和模型只加载一次"""
-    global _embedding_model_instance, _chroma_client
 
-    #  加载数据库客户端
-    if _chroma_client is None:
-        print(f" [首次加载] 正在连接数据库: {db_path}")
-        _chroma_client = chromadb.PersistentClient(path=db_path)
+def _load_vector_store(db_path):
+    """Load embeddings.npy and metadata.json from db_path directory."""
+    global _vector_store
+    if _vector_store is not None:
+        return _vector_store
 
-    #  加载 Embedding 模型
-    if _embedding_model_instance is None:
-        print(f" [首次加载] 正在加载 Embedding 模型: {model_name}")
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f'当前使用设备为: {device}')
-        _embedding_model_instance = SentenceTransformer(
-            model_name,
-            device=device,
-            model_kwargs={"torch_dtype": torch.float16}
+    emb_path = os.path.join(db_path, "embeddings.npy")
+    meta_path = os.path.join(db_path, "metadata.json")
+
+    if not os.path.exists(emb_path) or not os.path.exists(meta_path):
+        raise FileNotFoundError(
+            f"Vector store not found at {db_path}.\n"
+            f"Run: python scripts/build_vector_store.py"
         )
 
-    return _chroma_client, _embedding_model_instance
+    print(f" [首次加载] 正在加载向量数据库: {db_path}")
+    embeddings = np.load(emb_path)
+    with open(meta_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    _vector_store = {
+        "embeddings": embeddings.astype(np.float32),
+        "documents": data["documents"],
+        "metadata": data["metadata"],
+    }
+    print(f" 已加载 {len(_vector_store['documents'])} 条记录, 向量维度 {embeddings.shape[1]}")
+    return _vector_store
+
+
+def _load_embedding_model(model_name):
+    """Load sentence-transformers model once."""
+    global _embedding_model
+    if _embedding_model is not None:
+        return _embedding_model
+
+    print(f" [首次加载] 正在加载 Embedding 模型: {model_name}")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"当前使用设备为: {device}")
+    _embedding_model = SentenceTransformer(
+        model_name,
+        device=device,
+        model_kwargs={"torch_dtype": torch.float16},
+    )
+    return _embedding_model
+
+
+def _cosine_similarity(query_emb, corpus_emb):
+    """Compute cosine similarity between query and all corpus vectors."""
+    query_norm = query_emb / (np.linalg.norm(query_emb, axis=-1, keepdims=True) + 1e-10)
+    corpus_norm = corpus_emb / (np.linalg.norm(corpus_emb, axis=1, keepdims=True) + 1e-10)
+    return (corpus_norm @ query_norm.T).flatten()
 
 
 def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
-    client, model = get_resources(db_path, model_name)
-    collection = client.get_collection(name=collection_name)
+    """Hybrid retrieval: precise tag lookup + vector similarity search.
+
+    collection_name is ignored (kept for API compatibility).
+    """
+    store = _load_vector_store(db_path)
+    model = _load_embedding_model(model_name)
+
+    embeddings = store["embeddings"]
+    documents = store["documents"]
+    metadata = store["metadata"]
 
     print(f"\n搜索 大模型指令: {rewrite_text}")
 
     final_raw_docs = []
     seen_keys = set()
+    # threshold: only return results with cosine similarity >= MIN_COSINE_SCORE
+    # Scores can be negative for opposite meanings; 0.3 is a reasonable cutoff
+    MIN_COSINE_SCORE = -1.0  # permissive — reranker will filter low-quality results
 
-    #  VIP 拦截轨：精准点名
-    # 提取所有标签，如：
-    # - 【刑法-第二百三十三条】
-    # - 【刑法 第二百三十三条】
-    # - 【刑法第二百三十三条】
+    # --- 1. 精准点名 (tag lookup in metadata) ---
     tags = re.findall(r'【(.*?)】', rewrite_text)
 
     for tag in tags:
@@ -116,15 +148,19 @@ def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
         # 案例号精准检索
         if 'case_number' in parsed:
             case_num = parsed['case_number']
-            res = collection.get(where={"article_number": case_num})
-            if res['documents']:
-                for d, m in zip(res['documents'], res['metadatas']):
-                    key = f"{m.get('source', '')}_{m['article_number']}"
+            for i, meta in enumerate(metadata):
+                if meta.get('case_number') == case_num or meta.get('article_number') == case_num:
+                    key = f"{meta.get('source', '')}_{meta['article_number']}"
                     if key not in seen_keys:
-                        final_raw_docs.append({"content": d, "metadata": m, "method": "精准点名"})
+                        final_raw_docs.append({
+                            "content": documents[i],
+                            "metadata": {"source": meta["source"], "article_number": meta["article_number"],
+                                         "doc_type": meta.get("doc_type", "law")},
+                            "method": "精准点名",
+                        })
                         seen_keys.add(key)
-                        print(f" 精准命中案例：{m.get('source', '')} {m['article_number']}")
-                        print(f" 内容预览: {d[:60]}...")
+                        print(f" 精准命中案例：{meta.get('source', '')} {meta['article_number']}")
+                        print(f" 内容预览: {documents[i][:60]}...")
             continue
 
         # 法律条文精准检索
@@ -133,71 +169,62 @@ def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
         if not article_num:
             continue
 
-        # 数据库查询：只按编号搜（编号是唯一的，这样最稳）
-        res = collection.get(where={"article_number": article_num})
+        for i, meta in enumerate(metadata):
+            if meta['article_number'] != article_num:
+                continue
 
-        if res['documents']:
-            for d, m in zip(res['documents'], res['metadatas']):
-                db_source = m.get('source', '')
+            db_source = meta.get('source', '')
+            is_match = True
+            if law_name_query:
+                query_core = re.split(r'[_\\s\\u3000（(]', law_name_query)[0].strip()
+                if query_core in db_source or db_source in query_core:
+                    db_is_interp = any(kw in db_source for kw in ["解释", "规定"])
+                    query_is_interp = any(kw in query_core for kw in ["解释", "规定"])
+                    if db_is_interp != query_is_interp:
+                        is_match = False
+                else:
+                    is_match = False
 
-                is_match = True
-                if law_name_query:
-                    # 1. 依然先砍掉“(一)”等后缀，拿到标准核心名
-                    query_core = re.split(r'[_\\s\\u3000（(]', law_name_query)[0].strip()
+            if is_match:
+                key = f"{db_source}_{meta['article_number']}"
+                if key not in seen_keys:
+                    final_raw_docs.append({
+                        "content": documents[i],
+                        "metadata": {"source": meta["source"], "article_number": meta["article_number"],
+                                     "doc_type": meta.get("doc_type", "law")},
+                        "method": "精准点名",
+                    })
+                    seen_keys.add(key)
+                    print(f" 精准命中：{db_source} {meta['article_number']}")
+                    print(f" 内容预览: {documents[i][:60]}...")
 
-                    # 2. 只有“互相包含”才有进一步谈的资格
-                    if query_core in db_source or db_source in query_core:
-                        # 3. 【核心修复】：身份必须完全对等
-                        # 判断数据库里的和查询词里的，是否【都包含】或者【都不包含】“解释/规定”
-                        db_is_interp = any(kw in db_source for kw in ["解释", "规定"])
-                        query_is_interp = any(kw in query_core for kw in ["解释", "规定"])
-
-                        # 如果一个是解释，另一个不是，直接判定为“跨界误触”，强制拦截！
-                        if db_is_interp != query_is_interp:
-                            is_match = False
-                    else:
-                        is_match = False # 完全不包含，直接拒绝
-
-                if is_match:
-                    key = f"{db_source}_{m['article_number']}"
-                    if key not in seen_keys:
-                        final_raw_docs.append({"content": d, "metadata": m, "method": "精准点名"})
-                        seen_keys.add(key)
-                        print(f" 精准命中：{db_source} {m['article_number']}")
-                        print(f" 内容预览: {d[:60]}...")
-
-                        #  向量语义轨：海选补位
-    # 把 【】 标签去掉，剩下纯语义去搜向量
+    # --- 2. 向量语义检索 ---
     pure_query = re.sub(r'【.*?】', '', rewrite_text).strip()
     if pure_query:
-        print(f"🔍 [语义检索] 关键词: {pure_query}")
-        query_embedding = model.encode([pure_query], prompt_name="query", convert_to_numpy=True).tolist()
-        vector_res = collection.query(query_embeddings=query_embedding, n_results=n_results)
+        print(f"[语义检索] 关键词: {pure_query}")
+        query_emb = model.encode([pure_query], prompt_name="query", convert_to_numpy=True).astype(np.float32)
+        scores = _cosine_similarity(query_emb, embeddings)
 
-        for i in range(len(vector_res['documents'][0])):
-            d, m = vector_res['documents'][0][i], vector_res['metadatas'][0][i]
-            key = f"{m['source']}_{m['article_number']}"
+        # Get top-k indices
+        top_k = min(n_results, len(scores))
+        top_indices = np.argpartition(-scores, top_k - 1)[:top_k]
+        top_indices = top_indices[np.argsort(-scores[top_indices])]
+
+        for idx in top_indices:
+            if scores[idx] < MIN_COSINE_SCORE:
+                continue
+            meta = metadata[idx]
+            key = f"{meta['source']}_{meta['article_number']}"
             if key not in seen_keys:
-                final_raw_docs.append({"content": d, "metadata": m, "method": "向量召回"})
+                final_raw_docs.append({
+                    "content": documents[idx],
+                    "metadata": {"source": meta["source"], "article_number": meta["article_number"],
+                                 "doc_type": meta.get("doc_type", "law")},
+                    "method": "向量召回",
+                })
                 seen_keys.add(key)
-
     else:
         print(" [跳过向量搜索] 意图重写仅包含精准标签，无需执行模糊语义检索。")
 
     print(f"搜索完毕：共抓取 {len(final_raw_docs)} 条法条进入重排。")
     return final_raw_docs
-
-""" 
-results结构
-{
-    "documents": [ 
-        ["法条A", "法条B", "法条C"] , [                   ] // 这是第一个问题的搜索结果 (索引 0)
-    ],
-    "metadatas": [
-        [{"src": "民法典"}, {"src": "刑法"}, {"src": "担保解释"}] , [                   ] 
-    ],
-    "distances": [
-        [0.12, 0.45, 0.88] , [                   ] 
-    ]
-}
-"""

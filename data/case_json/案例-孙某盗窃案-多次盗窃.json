@@ -1,7 +1,6 @@
 [
     {
-        "id": "case_案例-孙某盗窃案-多次盗窃",
-        "article_number": "案例-孙某盗窃案-多次盗窃",
+        "id": "case_案例_孙某盗窃案_多次盗窃",
         "hierarchy": {
             "book": "",
             "subbook": "",

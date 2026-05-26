@@ -280,10 +280,10 @@ def parse_case(file_path, output_json):
 
     total_text = "\n".join(full_text)
 
+    safe_name = re.sub(r'[^\w一-鿿]', '_', file_name_without_ext)
     if len(total_text) < 2000:
         record = {
-            "id": f"case_{case_number}",
-            "article_number": case_number,
+            "id": f"case_{safe_name}",
             "hierarchy": {
                 "book": "",
                 "subbook": "",
@@ -306,7 +306,7 @@ def parse_case(file_path, output_json):
             if len(content) < 20:
                 continue
             record = {
-                "id": f"case_{case_number}_{section_name}",
+                "id": f"case_{safe_name}_{section_name}",
                 "article_number": case_number,
                 "hierarchy": {
                     "book": "",
