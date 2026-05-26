@@ -1,9 +1,31 @@
+# Environment
 .env
 .env/
+.env.local
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Node.js
 node_modules/
 .next/
 dist/
 package-lock.json
-legal_vector_db/
+
+# Database
+data/legal_vector_db/
+app.db
+*.db.bak
+
+# IDE
+.idea/
+.vscode/
+
+# Build artifacts
+next-app/.next/
+
+# Runtime files
+scrape_progress.json
+fetch_progress.json

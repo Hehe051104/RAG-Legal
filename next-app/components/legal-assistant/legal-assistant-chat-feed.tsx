@@ -1,11 +1,13 @@
 "use client";
 
 import { LegalAssistantChatTimeline } from "./legal-assistant-chat-timeline";
+import type { LegalReference } from "./api";
 
 type ChatFeedMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  references?: LegalReference[];
   createdAt: string;
   status?: "streaming" | "done" | "error";
   isError?: boolean;

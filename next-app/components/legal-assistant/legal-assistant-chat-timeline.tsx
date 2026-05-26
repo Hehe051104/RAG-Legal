@@ -4,18 +4,20 @@ import { LegalAssistantChatEmptyState } from "./legal-assistant-chat-empty-state
 import { LegalAssistantChatQuickPrompts } from "./legal-assistant-chat-quick-prompts";
 import { LegalAssistantChatSendingIndicator } from "./legal-assistant-chat-sending-indicator";
 import { LegalAssistantMessageBubble } from "./legal-assistant-message-bubble";
+import type { LegalReference } from "./api";
 
 const quickPrompts = [
-  "请总结《民法典》中合同无效的核心判断要点。",
-  "请给出侵权责任纠纷的法律分析提纲。",
-  "请比较保证责任与抵押担保的关键差异。",
-  "请列出探望权纠纷中常见的裁判思路。",
+  "公司以末位淘汰为由辞退员工，是否合法？",
+  "网购商品与描述不符，如何维权并要求赔偿？",
+  "交通事故中对方全责，可以主张哪些赔偿项目？",
+  "婚前房产婚后共同还贷，离婚时如何分割？",
 ];
 
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  references?: LegalReference[];
   createdAt: string;
   status?: "streaming" | "done" | "error";
   isError?: boolean;
@@ -40,6 +42,7 @@ export function LegalAssistantChatTimeline({
         messages.map((message) => (
           <LegalAssistantMessageBubble
             content={message.content}
+            references={message.references}
             createdAt={message.createdAt}
             isError={message.isError}
             key={message.id}

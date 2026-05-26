@@ -2,10 +2,25 @@ import { getApiUrl } from "@/lib/api-url";
 
 export type LegalAssistantRole = "user" | "assistant";
 
+export type LegalReference = {
+  source: string;
+  article: string;
+  content: string;
+  score: number;
+  hierarchy?: {
+    book?: string;
+    chapter?: string;
+    section?: string;
+  };
+  doc_type?: string;
+  method?: string;
+};
+
 export type LegalAssistantMessage = {
   id: string;
   role: LegalAssistantRole;
   content: string;
+  references?: LegalReference[];
   createdAt: string;
   status?: "streaming" | "done" | "error";
   isError?: boolean;
@@ -45,6 +60,7 @@ export type ChatRequestPayload = {
   n_results: number;
   threshold: number;
   force_search: boolean;
+  stream: boolean;
 };
 
 export const LEGAL_ASSISTANT_CHAT_ENDPOINT =
@@ -152,6 +168,7 @@ export function buildChatRequestPayload(options: {
     n_results: 15,
     threshold: -2,
     force_search: true,
+    stream: true,
   };
 }
 
@@ -195,33 +212,64 @@ async function getErrorMessageFromResponse(response: Response): Promise<string> 
 function appendStreamPayload(
   payload: string,
   onDelta: (delta: string) => void,
-): string {
+): { text: string; references: LegalReference[] } {
   const trimmed = normalizeChunkText(payload);
   if (!trimmed || trimmed === "[DONE]") {
-    return "";
+    return { text: "", references: [] };
   }
 
   try {
     const parsed = JSON.parse(trimmed) as unknown;
-    const extracted = extractTextFromUnknownPayload(parsed).trim();
-    if (extracted) {
-      onDelta(extracted);
-      return extracted;
+    const result = parseJsonContent(parsed, onDelta);
+    if (result.text) {
+      return result;
     }
   } catch {
     onDelta(trimmed);
-    return trimmed;
+    return { text: trimmed, references: [] };
   }
 
   onDelta(trimmed);
-  return trimmed;
+  return { text: trimmed, references: [] };
 }
 
-function parseJsonContent(json: unknown, onDelta: (delta: string) => void): string {
+function extractReferencesFromPayload(json: unknown): LegalReference[] {
+  if (!isRecord(json)) {
+    return [];
+  }
+
+  const refs = json.references;
+  if (!Array.isArray(refs)) {
+    return [];
+  }
+
+  return refs.filter(isRecord).map((ref) => ({
+    source: typeof ref.source === "string" ? ref.source : "未知",
+    article: typeof ref.article === "string" ? ref.article : "未知",
+    content: typeof ref.content === "string" ? ref.content : "",
+    score: typeof ref.score === "number" ? ref.score : 0,
+    hierarchy: isRecord(ref.hierarchy)
+      ? {
+          book: typeof ref.hierarchy.book === "string" ? ref.hierarchy.book : undefined,
+          chapter: typeof ref.hierarchy.chapter === "string" ? ref.hierarchy.chapter : undefined,
+          section: typeof ref.hierarchy.section === "string" ? ref.hierarchy.section : undefined,
+        }
+      : undefined,
+    doc_type: typeof ref.doc_type === "string" ? ref.doc_type : undefined,
+    method: typeof ref.method === "string" ? ref.method : undefined,
+  }));
+}
+
+function parseJsonContent(
+  json: unknown,
+  onDelta: (delta: string) => void,
+): { text: string; references: LegalReference[] } {
+  const references = extractReferencesFromPayload(json);
+
   const extracted = extractTextFromUnknownPayload(json).trim();
   if (extracted) {
     onDelta(extracted);
-    return extracted;
+    return { text: extracted, references };
   }
 
   if (isRecord(json)) {
@@ -232,17 +280,17 @@ function parseJsonContent(json: unknown, onDelta: (delta: string) => void): stri
 
     if (nested) {
       onDelta(nested);
-      return nested;
+      return { text: nested, references };
     }
   }
 
-  return "";
+  return { text: "", references };
 }
 
 export async function readChatResponse(
   response: Response,
   onDelta: (delta: string) => void,
-): Promise<string> {
+): Promise<{ text: string; references: LegalReference[] }> {
   const contentType = response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
@@ -251,7 +299,7 @@ export async function readChatResponse(
   }
 
   if (!response.body) {
-    return "";
+    return { text: "", references: [] };
   }
 
   const reader = response.body.getReader();
@@ -259,6 +307,7 @@ export async function readChatResponse(
   let buffer = "";
   let eventLines: string[] = [];
   let assistantText = "";
+  let accumulatedReferences: LegalReference[] = [];
 
   const flushEvent = () => {
     if (!eventLines.length) {
@@ -267,7 +316,11 @@ export async function readChatResponse(
 
     const dataPayload = eventLines.join("\n");
     eventLines = [];
-    assistantText += appendStreamPayload(dataPayload, onDelta);
+    const result = appendStreamPayload(dataPayload, onDelta);
+    assistantText += result.text;
+    if (result.references.length > 0) {
+      accumulatedReferences = result.references;
+    }
   };
 
   while (true) {
@@ -301,7 +354,11 @@ export async function readChatResponse(
         flushEvent();
       }
 
-      assistantText += appendStreamPayload(line, onDelta);
+      const result = appendStreamPayload(line, onDelta);
+      assistantText += result.text;
+      if (result.references.length > 0) {
+        accumulatedReferences = result.references;
+      }
     }
   }
 
@@ -310,13 +367,17 @@ export async function readChatResponse(
       eventLines.push(buffer.trimStart().slice(5).trimStart());
       flushEvent();
     } else {
-      assistantText += appendStreamPayload(buffer, onDelta);
+      const result = appendStreamPayload(buffer, onDelta);
+      assistantText += result.text;
+      if (result.references.length > 0) {
+        accumulatedReferences = result.references;
+      }
     }
   } else {
     flushEvent();
   }
 
-  return assistantText.trim();
+  return { text: assistantText.trim(), references: accumulatedReferences };
 }
 
 export async function fetchAssistantErrorMessage(response: Response): Promise<string> {

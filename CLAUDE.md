@@ -4,7 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Chinese legal RAG chatbot. Users ask legal questions; the system retrieves relevant laws/judicial interpretations from a ChromaDB vector database and generates answers using a local LLM (Qwen 2.5 7B via Ollama). The frontend is a Next.js chat UI.
+Chinese legal RAG chatbot with IRAC analysis framework. Users ask legal questions; the system retrieves relevant laws/judicial interpretations/cases from a ChromaDB vector database and generates structured legal analysis using IRAC methodology (Issue, Rule, Application, Conclusion) via a local LLM (Qwen 2.5 7B via Ollama). The frontend is a Next.js chat UI.
+
+## Project Structure
+
+```
+├── src/                    # Core business code
+│   ├── RAG.py             # Query rewriting + LLM calls (IRAC prompts)
+│   ├── search.py          # Hybrid retrieval (tag + vector)
+│   ├── rerank.py          # Cross-encoder reranking
+│   ├── config.py          # Central config
+│   ├── api_server.py      # FastAPI entry point
+│   ├── database.py        # SQLAlchemy async DB
+│   ├── models.py          # Data models
+│   ├── utils.py           # Utilities (email, auth)
+│   ├── injest.py          # Embedding + ChromaDB ingestion
+│   ├── data_process.py    # .docx parsing
+│   └── routers/auth.py    # Auth endpoints
+├── scripts/                # Utility scripts
+│   ├── create_registry.py
+│   ├── generate_cases.py
+│   ├── scrape_legal_data.py
+│   ├── process_and_ingest.py
+│   └── main_cli.py
+├── data/                   # All data files
+│   ├── 法律原文/           # 26 law .docx files
+│   ├── 司法解释/           # 9 judicial interpretation .docx files
+│   ├── 案例/               # 200+ case .docx files
+│   ├── code_json/          # Parsed law JSON
+│   ├── case_json/          # Parsed case JSON
+│   ├── interpretation_json/
+│   ├── legal_vector_db/    # ChromaDB database
+│   └── registry.json
+├── next-app/               # Next.js frontend
+├── run_server.py           # Server entry point
+├── requirements.txt
+├── CLAUDE.md
+└── .env / .env.example
+```
 
 ## Running the Project
 
@@ -12,7 +49,7 @@ Chinese legal RAG chatbot. Users ask legal questions; the system retrieves relev
 ```bash
 pip install -r requirements.txt
 ollama run Lusizo/qwen2.5-7b-instruct-1m   # start local LLM
-python api_server.py                         # FastAPI on port 8000, docs at /docs
+python run_server.py                         # FastAPI on port 8000
 ```
 
 **Frontend (Next.js):**
@@ -20,60 +57,62 @@ python api_server.py                         # FastAPI on port 8000, docs at /do
 cd next-app
 pnpm install
 pnpm dev          # http://localhost:3000
-pnpm build        # production build
 ```
 
-**CLI REPL (no frontend needed):**
+**CLI REPL:**
 ```bash
-python "main(search+RAG+rerank).py"
+python scripts/main_cli.py
 ```
 
-**Testing:**
-- Backend: `python scripts/debug_auth_flow.py` (auth integration test), `python test_email.py`
-- Frontend: `cd next-app && pnpm test` (Playwright E2E)
+**Data ingestion:**
+```bash
+python scripts/create_registry.py        # regenerate registry.json
+python scripts/process_and_ingest.py     # parse + embed into ChromaDB
+```
 
-**Data ingestion (adding new legal documents):**
-1. Place .docx in `法律原文/` (laws) or `司法解释/` (judicial interpretations)
-2. `python create_registry.py` -- regenerate `registry.json`
-3. `python "process+injest(一键批量完成).py"` -- parse + embed into ChromaDB
+**Generate cases:**
+```bash
+python scripts/generate_cases.py         # generate 200+ case .docx files
+```
 
 ## Architecture
 
-Three-stage RAG pipeline:
+**IRAC Legal Analysis Framework:**
+- **Issue**: Query rewrite identifies core legal issues
+- **Rule**: Hybrid retrieval finds relevant laws, interpretations, and cases
+- **Application**: LLM applies rules to specific facts
+- **Conclusion**: Structured legal opinion with risk warnings
 
-**Offline pipeline:** `.docx` → `data_process.py` (parse to JSON) → `injest.py` (embed with Qwen3-Embedding-0.6B) → `legal_vector_db/` (ChromaDB)
+**Three-stage RAG pipeline:**
 
-**Online retrieval:** User query → `RAG.py:rewrite_query()` (LLM intent analysis + keyword extraction) → `search.py:run_search()` (two parallel tracks: tag-based exact lookup for article references like "刑法第2条", and semantic vector search) → `rerank.py:rerank_context()` (BAAI/bge-reranker-v2-m3 cross-encoder; VIP tag-hits get score 999.0 and bypass filtering)
+1. **Offline**: `.docx` → `data_process.py` → `injest.py` → ChromaDB
+2. **Online retrieval**: Query → `RAG.py:rewrite_query()` → `search.py:run_search()` (tag + vector) → `rerank.py:rerank_context()`
+3. **Generation**: Ranked docs → `RAG.py:call_ollama_rag()` → IRAC-structured response
 
-**Generation:** Ranked docs + query → `RAG.py:call_ollama_rag()` → Ollama → structured JSON response (success/need_clarify/reject_non_legal/rewrite) with source citations
-
-**Auth system:** Email verification (6-digit code, HMAC-SHA256, 5-min TTL), Argon2 password hashing, JWT (HS256, 120min), Google OAuth, role-based (user/admin). Backend: `routers/auth.py`, `utils.py`, `models.py`, `database.py`.
+**Auth system:** Email verification, Argon2 hashing, JWT, Google OAuth, role-based access.
 
 ## Key Files
 
 | File | Role |
 |------|------|
-| `api_server.py` | FastAPI app, mounts auth router, chat endpoint |
-| `RAG.py` | Query rewriting, LLM calls, audit logic |
-| `search.py` | Hybrid retrieval (tag-based + vector) |
-| `rerank.py` | Cross-encoder reranking |
-| `data_process.py` | .docx parsing (two parsers: laws vs interpretations) |
-| `injest.py` | Embedding + ChromaDB ingestion |
-| `config.py` | Central config (model names, DB paths, defaults) |
-| `routers/auth.py` | All auth endpoints |
-| `next-app/app/(chat)/` | Chat UI pages and `/api/chat` route |
-| `next-app/lib/api/auth.ts` | Frontend auth API client |
-| `next-app/lib/ai/` | AI model config, prompts, tools |
+| `src/api_server.py` | FastAPI app, chat endpoint with IRAC audit |
+| `src/RAG.py` | Query rewriting, IRAC prompts, LLM calls |
+| `src/search.py` | Hybrid retrieval (tag + vector, supports case numbers) |
+| `src/rerank.py` | Cross-encoder reranking |
+| `src/config.py` | Central config (PROJECT_ROOT, DATA_DIR, models) |
+| `scripts/generate_cases.py` | 200+ case templates across 14 legal areas |
 
 ## Environment Variables
 
-Copy `.env.example` → `.env` (backend) and `next-app/.env.example` → `next-app/.env.local` (frontend). Key vars: SMTP credentials for email verification, Google OAuth client ID/secret, `ADMIN_EMAIL_WHITELIST` for admin role assignment.
+Copy `.env.example` → `.env`. Key vars: SMTP credentials, Google OAuth, `ADMIN_EMAIL_WHITELIST`.
 
 ## Conventions
 
-- Backend uses async Python throughout (FastAPI + SQLAlchemy async + aiosqlite)
-- Frontend uses pnpm, not npm or yarn
-- Frontend linting: Biome (`pnpm check` in next-app/)
-- Legal documents are in Chinese; code comments and variable names mix Chinese and English
-- The `legal_vector_db/` directory contains a pre-built ChromaDB -- only regenerate when adding new documents
-- `config.py` is the single source of truth for model names, paths, and default RAG parameters
+- Backend uses async Python (FastAPI + SQLAlchemy async + aiosqlite)
+- Frontend uses pnpm
+- Legal documents are in Chinese; code comments mix Chinese and English
+- `data/legal_vector_db/` contains pre-built ChromaDB
+- `src/config.py` defines `PROJECT_ROOT` and `DATA_DIR` for all path references
+- All scripts in `scripts/` add `src/` to sys.path before importing
+- Use `D:\anaconda\envs\drl\python.exe` for Python with torch/chromadb
+- Set `HF_ENDPOINT=https://hf-mirror.com` for HuggingFace model downloads

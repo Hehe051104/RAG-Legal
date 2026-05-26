@@ -1,6 +1,7 @@
 "use client";
 
-import { ScaleIcon } from "lucide-react";
+import { ScaleIcon, BookOpenIcon, BriefcaseIcon, FileTextIcon } from "lucide-react";
+import { LegalDisclaimer } from "./legal-disclaimer";
 
 export function LegalAssistantChatEmptyState() {
   return (
@@ -8,16 +9,52 @@ export function LegalAssistantChatEmptyState() {
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[11px] text-muted-foreground shadow-[var(--shadow-card)]">
           <ScaleIcon className="size-3.5" />
-          法律助手工作区
+          AI 法律顾问 · IRAC 分析框架
         </div>
 
         <h2 className="font-semibold text-2xl tracking-tight text-foreground md:text-3xl">
-          直接开始法律问答
+          专业法律分析助手
         </h2>
 
         <p className="mx-auto max-w-2xl text-muted-foreground/80 text-sm">
-          可以询问法条解释、裁判思路、争议要点和案件分析提纲。
+          基于 IRAC 法律分析方法，为您提供结构化的法律意见：
         </p>
+      </div>
+
+      <div className="mt-4 grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { icon: "I", title: "争点识别", desc: "Issue", color: "text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400" },
+          { icon: "R", title: "法律规则", desc: "Rule", color: "text-purple-600 bg-purple-50 dark:bg-purple-950/30 dark:text-purple-400" },
+          { icon: "A", title: "适用分析", desc: "Application", color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400" },
+          { icon: "C", title: "结论建议", desc: "Conclusion", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400" },
+        ].map((item) => (
+          <div key={item.icon} className="flex flex-col items-center gap-1.5 rounded-lg border border-border/30 bg-card/30 px-3 py-3">
+            <span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-bold ${item.color}`}>
+              {item.icon}
+            </span>
+            <span className="text-[12px] font-medium text-foreground">{item.title}</span>
+            <span className="text-[10px] text-muted-foreground">{item.desc}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <BookOpenIcon className="size-3" />
+          26 部法律
+        </span>
+        <span className="flex items-center gap-1">
+          <FileTextIcon className="size-3" />
+          9 条司法解释
+        </span>
+        <span className="flex items-center gap-1">
+          <BriefcaseIcon className="size-3" />
+          200+ 案例
+        </span>
+      </div>
+
+      <div className="mt-5 w-full max-w-2xl">
+        <LegalDisclaimer />
       </div>
     </div>
   );

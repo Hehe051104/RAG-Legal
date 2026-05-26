@@ -21,6 +21,7 @@ import {
   type LegalAssistantConversation,
   type LegalAssistantFolder,
   type LegalAssistantMessage,
+  type LegalReference,
 } from "./api";
 
 export type LegalAssistantTheme = "system" | "light" | "dark";
@@ -120,6 +121,7 @@ type Action =
         conversationId: string;
         messageId: string;
         content: string;
+        references?: LegalReference[];
         isError?: boolean;
       };
     }
@@ -424,6 +426,7 @@ function reducer(state: HomeState, action: Action): HomeState {
                 ? {
                     ...message,
                     content: action.payload.content,
+                    references: action.payload.references ?? message.references,
                     status: action.payload.isError ? "error" : "done",
                     isError: action.payload.isError ?? false,
                   }
@@ -654,7 +657,7 @@ export function HomeProvider({
         }
 
         let assistantText = "";
-        const streamedText = await readChatResponse(response, (delta) => {
+        const chatResult = await readChatResponse(response, (delta) => {
           assistantText += delta;
           dispatch({
             type: "APPEND_MESSAGE_TEXT",
@@ -667,7 +670,7 @@ export function HomeProvider({
         });
 
         const finalText = (
-          assistantText || streamedText || "后端已响应，但未返回可展示文本。"
+          assistantText || chatResult.text || "后端已响应，但未返回可展示文本。"
         ).trim();
 
         dispatch({
@@ -676,6 +679,7 @@ export function HomeProvider({
             conversationId: conversationForState.id,
             messageId: assistantMessageId,
             content: finalText,
+            references: chatResult.references.length > 0 ? chatResult.references : undefined,
             isError: false,
           },
         });

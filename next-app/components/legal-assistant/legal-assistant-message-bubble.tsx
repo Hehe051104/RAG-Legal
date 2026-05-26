@@ -6,6 +6,8 @@ import { MessageResponse } from "@/components/ai-elements/message";
 import { SparklesIcon } from "@/components/chat/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LegalReferenceCard } from "./legal-reference-card";
+import type { LegalReference } from "./api";
 
 function formatTimestamp(iso: string) {
   const date = new Date(iso);
@@ -17,9 +19,45 @@ function formatTimestamp(iso: string) {
       }).format(date);
 }
 
+function ReferencesByType({ references }: { references: LegalReference[] }) {
+  // 按文档类型分组
+  const lawRefs = references.filter((r) => r.doc_type === "law");
+  const interpRefs = references.filter((r) => r.doc_type === "interpretation");
+  const caseRefs = references.filter((r) => r.doc_type === "case");
+
+  const sections = [
+    { title: "法律依据", refs: lawRefs, icon: "§" },
+    { title: "司法解释", refs: interpRefs, icon: "释" },
+    { title: "参考案例", refs: caseRefs, icon: "案" },
+  ].filter((s) => s.refs.length > 0);
+
+  return (
+    <div className="mt-3 space-y-3">
+      {sections.map((section) => (
+        <div key={section.title}>
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <span className="flex size-4 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
+              {section.icon}
+            </span>
+            <span className="text-[11px] font-medium text-muted-foreground/80">
+              {section.title}（{section.refs.length}条）
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {section.refs.map((ref) => (
+              <LegalReferenceCard key={`${ref.source}-${ref.article}`} reference={ref} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type LegalAssistantMessageBubbleProps = {
   role: "user" | "assistant";
   content: string;
+  references?: LegalReference[];
   status?: "streaming" | "done" | "error";
   isError?: boolean;
   createdAt: string;
@@ -28,6 +66,7 @@ type LegalAssistantMessageBubbleProps = {
 export function LegalAssistantMessageBubble({
   role,
   content,
+  references,
   status,
   isError,
   createdAt,
@@ -75,6 +114,10 @@ export function LegalAssistantMessageBubble({
                 <MessageResponse className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-pre:my-2 dark:prose-invert">
                   {content}
                 </MessageResponse>
+              ) : null}
+
+              {references && references.length > 0 ? (
+                <ReferencesByType references={references} />
               ) : null}
 
               {showStreaming ? (

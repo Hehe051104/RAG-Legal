@@ -1,0 +1,1358 @@
+[
+    {
+        "docx_name": "中华人民共和国专利法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国专利法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国专利法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国企业破产法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国企业破产法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国企业破产法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国保险法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国保险法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国保险法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国公司法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国公司法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国公司法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国刑法_20201226.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国刑法_20201226.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国刑法_20201226.json"
+    },
+    {
+        "docx_name": "中华人民共和国劳动合同法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国劳动合同法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国劳动合同法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国劳动法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国劳动法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国劳动法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国反不正当竞争法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国反不正当竞争法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国反不正当竞争法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国反垄断法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国反垄断法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国反垄断法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国合伙企业法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国合伙企业法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国合伙企业法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国商标法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国商标法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国商标法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国土地管理法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国土地管理法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国土地管理法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国宪法（2018年修正文本）_20180311.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国宪法（2018年修正文本）_20180311.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国宪法（2018年修正文本）_20180311.json"
+    },
+    {
+        "docx_name": "中华人民共和国数据安全法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国数据安全法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国数据安全法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国未成年人保护法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国未成年人保护法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国未成年人保护法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国民事诉讼法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国民事诉讼法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国民事诉讼法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国民法典_20200528.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国民法典_20200528.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国民法典_20200528.json"
+    },
+    {
+        "docx_name": "中华人民共和国治安管理处罚法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国治安管理处罚法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国治安管理处罚法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国消费者权益保护法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国消费者权益保护法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国消费者权益保护法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国环境保护法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国环境保护法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国环境保护法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国网络安全法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国网络安全法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国网络安全法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国著作权法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国著作权法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国著作权法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国行政处罚法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国行政处罚法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国行政处罚法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国行政复议法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国行政复议法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国行政复议法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国道路交通安全法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国道路交通安全法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国道路交通安全法_20260525.json"
+    },
+    {
+        "docx_name": "中华人民共和国食品安全法_20260525.docx",
+        "full_path": "D:/github/RAG法律/data/法律原文/中华人民共和国食品安全法_20260525.docx",
+        "type": "code",
+        "output_json": "D:\\github\\RAG法律\\data\\code_json/中华人民共和国食品安全法_20260525.json"
+    },
+    {
+        "docx_name": "指导案例143号-北京兰世达光电科技有限公司诉赵某某名誉权纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例143号-北京兰世达光电科技有限公司诉赵某某名誉权纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例143号-北京兰世达光电科技有限公司诉赵某某名誉权纠纷案.json"
+    },
+    {
+        "docx_name": "指导案例1号-上海中原物业顾问有限公司诉陶德华居间合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例1号-上海中原物业顾问有限公司诉陶德华居间合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例1号-上海中原物业顾问有限公司诉陶德华居间合同纠纷案.json"
+    },
+    {
+        "docx_name": "指导案例24号-荣宝英诉王阳、永诚财产保险股份有限公司机动车交通事故责任纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例24号-荣宝英诉王阳、永诚财产保险股份有限公司机动车交通事故责任纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例24号-荣宝英诉王阳、永诚财产保险股份有限公司机动车交通事故责任纠纷案.json"
+    },
+    {
+        "docx_name": "指导案例24号-荣宝英诉王阳、永诚财产保险股份有限公司江阴支公司机动车交通事故责任纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例24号-荣宝英诉王阳、永诚财产保险股份有限公司江阴支公司机动车交通事故责任纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例24号-荣宝英诉王阳、永诚财产保险股份有限公司江阴支公司机动车交通事故责任纠纷案.json"
+    },
+    {
+        "docx_name": "指导案例2号-吴梅诉四川省眉山西城纸业有限公司买卖合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例2号-吴梅诉四川省眉山西城纸业有限公司买卖合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例2号-吴梅诉四川省眉山西城纸业有限公司买卖合同纠纷案.json"
+    },
+    {
+        "docx_name": "指导案例72号-汤龙等诉新疆鄂尔多斯彦海房地产开发有限公司商品房买卖合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例72号-汤龙等诉新疆鄂尔多斯彦海房地产开发有限公司商品房买卖合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例72号-汤龙等诉新疆鄂尔多斯彦海房地产开发有限公司商品房买卖合同纠纷案.json"
+    },
+    {
+        "docx_name": "指导案例7号-牡丹江市宏阁建筑安装有限责任公司诉牡丹江市华隆房地产开发有限责任公司等建设工程施工合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/指导案例7号-牡丹江市宏阁建筑安装有限责任公司诉牡丹江市华隆房地产开发有限责任公司等建设工程施工合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/指导案例7号-牡丹江市宏阁建筑安装有限责任公司诉牡丹江市华隆房地产开发有限责任公司等建设工程施工合同纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丁诉某商家虚假宣传案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丁诉某商家虚假宣传案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丁诉某商家虚假宣传案.json"
+    },
+    {
+        "docx_name": "案例-丙公司诉丁公司商业秘密侵权案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙公司诉丁公司商业秘密侵权案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙公司诉丁公司商业秘密侵权案.json"
+    },
+    {
+        "docx_name": "案例-丙公司诉丁公司技术合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙公司诉丁公司技术合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙公司诉丁公司技术合同纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙公司诉丁公司运输合同纠纷案-货物损坏.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙公司诉丁公司运输合同纠纷案-货物损坏.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙公司诉丁公司运输合同纠纷案-货物损坏.json"
+    },
+    {
+        "docx_name": "案例-丙股东诉丁公司决议效力确认案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙股东诉丁公司决议效力确认案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙股东诉丁公司决议效力确认案.json"
+    },
+    {
+        "docx_name": "案例-丙股东诉丁公司损害股东利益责任案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙股东诉丁公司损害股东利益责任案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙股东诉丁公司损害股东利益责任案.json"
+    },
+    {
+        "docx_name": "案例-丙股东诉丁公司盈余分配纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙股东诉丁公司盈余分配纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙股东诉丁公司盈余分配纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁买卖合同案-质量保证期.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁买卖合同案-质量保证期.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁买卖合同案-质量保证期.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁交通事故案-好意同乘.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁交通事故案-好意同乘.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁交通事故案-好意同乘.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁人格权纠纷案-个人信息保护.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁人格权纠纷案-个人信息保护.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁人格权纠纷案-个人信息保护.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁借款合同案-砍头息.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁借款合同案-砍头息.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁借款合同案-砍头息.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁变更抚养权案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁变更抚养权案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁变更抚养权案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁合伙协议纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁合伙协议纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁合伙协议纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁房屋买卖合同案-阴阳合同.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁房屋买卖合同案-阴阳合同.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁房屋买卖合同案-阴阳合同.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁房屋租赁合同纠纷案-提前解约.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁房屋租赁合同纠纷案-提前解约.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁房屋租赁合同纠纷案-提前解约.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁探望权纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁探望权纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁探望权纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁教育机构责任案-学生在校受伤.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁教育机构责任案-学生在校受伤.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁教育机构责任案-学生在校受伤.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁民间借贷案-虚假诉讼.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁民间借贷案-虚假诉讼.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁民间借贷案-虚假诉讼.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁物业服务合同案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁物业服务合同案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁物业服务合同案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁生命权纠纷案-见义勇为补偿.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁生命权纠纷案-见义勇为补偿.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁生命权纠纷案-见义勇为补偿.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁租赁合同案-买卖不破租赁.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁租赁合同案-买卖不破租赁.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁租赁合同案-买卖不破租赁.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁继承纠纷案-遗赠扶养协议.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁继承纠纷案-遗赠扶养协议.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁继承纠纷案-遗赠扶养协议.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁著作权侵权案-网络转载.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁著作权侵权案-网络转载.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁著作权侵权案-网络转载.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁著作权案-合作作品.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁著作权案-合作作品.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁著作权案-合作作品.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁著作权案-短视频侵权.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁著作权案-短视频侵权.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁著作权案-短视频侵权.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁证券公司内幕交易民事赔偿案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁证券公司内幕交易民事赔偿案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁证券公司内幕交易民事赔偿案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁赠与合同案-任意撤销.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁赠与合同案-任意撤销.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁赠与合同案-任意撤销.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁赡养纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁赡养纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁赡养纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁运输合同案-旅客伤亡.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁运输合同案-旅客伤亡.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁运输合同案-旅客伤亡.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁银行储蓄存款合同纠纷案-银行卡盗刷.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁银行储蓄存款合同纠纷案-银行卡盗刷.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁银行储蓄存款合同纠纷案-银行卡盗刷.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁隐私权纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁隐私权纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁隐私权纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙诉丁饲养动物损害责任案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉丁饲养动物损害责任案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉丁饲养动物损害责任案.json"
+    },
+    {
+        "docx_name": "案例-丙诉某公司劳动争议案-未缴社保.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某公司劳动争议案-未缴社保.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某公司劳动争议案-未缴社保.json"
+    },
+    {
+        "docx_name": "案例-丙诉某公司劳动争议案-违法约定试用期.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某公司劳动争议案-违法约定试用期.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某公司劳动争议案-违法约定试用期.json"
+    },
+    {
+        "docx_name": "案例-丙诉某医院医疗损害案-病历篡改.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某医院医疗损害案-病历篡改.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某医院医疗损害案-病历篡改.json"
+    },
+    {
+        "docx_name": "案例-丙诉某旅行社旅游合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某旅行社旅游合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某旅行社旅游合同纠纷案.json"
+    },
+    {
+        "docx_name": "案例-丙诉某环保局行政许可案-环评审批.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某环保局行政许可案-环评审批.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某环保局行政许可案-环评审批.json"
+    },
+    {
+        "docx_name": "案例-丙诉某税务局税务行政案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某税务局税务行政案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某税务局税务行政案.json"
+    },
+    {
+        "docx_name": "案例-丙诉某街道办行政强制案-违法强拆.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-丙诉某街道办行政强制案-违法强拆.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-丙诉某街道办行政强制案-违法强拆.json"
+    },
+    {
+        "docx_name": "案例-乙诉某健身房预付卡退款案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某健身房预付卡退款案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某健身房预付卡退款案.json"
+    },
+    {
+        "docx_name": "案例-乙诉某公司劳动争议案-工资拖欠.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某公司劳动争议案-工资拖欠.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某公司劳动争议案-工资拖欠.json"
+    },
+    {
+        "docx_name": "案例-乙诉某公司劳动争议案-竞业限制补偿.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某公司劳动争议案-竞业限制补偿.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某公司劳动争议案-竞业限制补偿.json"
+    },
+    {
+        "docx_name": "案例-乙诉某公安局户籍登记案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某公安局户籍登记案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某公安局户籍登记案.json"
+    },
+    {
+        "docx_name": "案例-乙诉某区政府行政征收案-补偿标准.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某区政府行政征收案-补偿标准.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某区政府行政征收案-补偿标准.json"
+    },
+    {
+        "docx_name": "案例-乙诉某医院医疗损害案-手术事故.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某医院医疗损害案-手术事故.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某医院医疗损害案-手术事故.json"
+    },
+    {
+        "docx_name": "案例-乙诉某市场监管局行政处罚案-处罚过重.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某市场监管局行政处罚案-处罚过重.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某市场监管局行政处罚案-处罚过重.json"
+    },
+    {
+        "docx_name": "案例-乙诉某教育局行政不作为案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-乙诉某教育局行政不作为案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-乙诉某教育局行政不作为案.json"
+    },
+    {
+        "docx_name": "案例-何某容留他人吸毒案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-何某容留他人吸毒案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-何某容留他人吸毒案.json"
+    },
+    {
+        "docx_name": "案例-冯某故意杀人案-正当防卫.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-冯某故意杀人案-正当防卫.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-冯某故意杀人案-正当防卫.json"
+    },
+    {
+        "docx_name": "案例-冯某非法猎捕野生动物案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-冯某非法猎捕野生动物案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-冯某非法猎捕野生动物案.json"
+    },
+    {
+        "docx_name": "案例-刘某侵犯公民个人信息案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-刘某侵犯公民个人信息案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-刘某侵犯公民个人信息案.json"
+    },
+    {
+        "docx_name": "案例-刘某挪用资金案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-刘某挪用资金案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-刘某挪用资金案.json"
+    },
+    {
+        "docx_name": "案例-刘某窝藏、包庇案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-刘某窝藏、包庇案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-刘某窝藏、包庇案.json"
+    },
+    {
+        "docx_name": "案例-吴某伪造国家机关公文案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-吴某伪造国家机关公文案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-吴某伪造国家机关公文案.json"
+    },
+    {
+        "docx_name": "案例-吴某袭警案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-吴某袭警案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-吴某袭警案.json"
+    },
+    {
+        "docx_name": "案例-吴某非法吸收公众存款案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-吴某非法吸收公众存款案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-吴某非法吸收公众存款案.json"
+    },
+    {
+        "docx_name": "案例-吴某非法控制计算机信息系统案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-吴某非法控制计算机信息系统案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-吴某非法控制计算机信息系统案.json"
+    },
+    {
+        "docx_name": "案例-周某危险作业案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-周某危险作业案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-周某危险作业案.json"
+    },
+    {
+        "docx_name": "案例-周某故意伤害案-轻伤二级.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-周某故意伤害案-轻伤二级.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-周某故意伤害案-轻伤二级.json"
+    },
+    {
+        "docx_name": "案例-周某非法持有毒品案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-周某非法持有毒品案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-周某非法持有毒品案.json"
+    },
+    {
+        "docx_name": "案例-壬诉癸保证合同纠纷案-连带保证.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-壬诉癸保证合同纠纷案-连带保证.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-壬诉癸保证合同纠纷案-连带保证.json"
+    },
+    {
+        "docx_name": "案例-孙某故意杀人案-自首立功.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-孙某故意杀人案-自首立功.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-孙某故意杀人案-自首立功.json"
+    },
+    {
+        "docx_name": "案例-孙某盗窃案-多次盗窃.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-孙某盗窃案-多次盗窃.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-孙某盗窃案-多次盗窃.json"
+    },
+    {
+        "docx_name": "案例-庚诉辛交通事故案-网约车.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-庚诉辛交通事故案-网约车.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-庚诉辛交通事故案-网约车.json"
+    },
+    {
+        "docx_name": "案例-庚诉辛出版社著作权侵权案-改编权.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-庚诉辛出版社著作权侵权案-改编权.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-庚诉辛出版社著作权侵权案-改编权.json"
+    },
+    {
+        "docx_name": "案例-庚诉辛商标侵权案-假冒注册商标.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-庚诉辛商标侵权案-假冒注册商标.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-庚诉辛商标侵权案-假冒注册商标.json"
+    },
+    {
+        "docx_name": "案例-庚诉辛服务合同纠纷案-预付卡退款.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-庚诉辛服务合同纠纷案-预付卡退款.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-庚诉辛服务合同纠纷案-预付卡退款.json"
+    },
+    {
+        "docx_name": "案例-庚诉辛物权确认案-善意取得.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-庚诉辛物权确认案-善意取得.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-庚诉辛物权确认案-善意取得.json"
+    },
+    {
+        "docx_name": "案例-张某故意伤害案-防卫过当.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-张某故意伤害案-防卫过当.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-张某故意伤害案-防卫过当.json"
+    },
+    {
+        "docx_name": "案例-张某故意杀人案-婚恋纠纷引发.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-张某故意杀人案-婚恋纠纷引发.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-张某故意杀人案-婚恋纠纷引发.json"
+    },
+    {
+        "docx_name": "案例-张某诉某公司劳动争议案-职业病.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-张某诉某公司劳动争议案-职业病.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-张某诉某公司劳动争议案-职业病.json"
+    },
+    {
+        "docx_name": "案例-张某诉某公司经济补偿金案-被迫辞职.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-张某诉某公司经济补偿金案-被迫辞职.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-张某诉某公司经济补偿金案-被迫辞职.json"
+    },
+    {
+        "docx_name": "案例-张某非法利用信息网络案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-张某非法利用信息网络案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-张某非法利用信息网络案.json"
+    },
+    {
+        "docx_name": "案例-戊公司诉己公司不正当竞争案-商业诋毁.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊公司诉己公司不正当竞争案-商业诋毁.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊公司诉己公司不正当竞争案-商业诋毁.json"
+    },
+    {
+        "docx_name": "案例-戊公司诉己公司商标侵权案-近似商标.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊公司诉己公司商标侵权案-近似商标.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊公司诉己公司商标侵权案-近似商标.json"
+    },
+    {
+        "docx_name": "案例-戊公司诉己公司委托合同纠纷案-越权代理.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊公司诉己公司委托合同纠纷案-越权代理.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊公司诉己公司委托合同纠纷案-越权代理.json"
+    },
+    {
+        "docx_name": "案例-戊股东诉己公司股东代表诉讼案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊股东诉己公司股东代表诉讼案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊股东诉己公司股东代表诉讼案.json"
+    },
+    {
+        "docx_name": "案例-戊股东诉己公司解散案-经营管理困难.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊股东诉己公司解散案-经营管理困难.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊股东诉己公司解散案-经营管理困难.json"
+    },
+    {
+        "docx_name": "案例-戊诉己中介合同案-跳单.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己中介合同案-跳单.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己中介合同案-跳单.json"
+    },
+    {
+        "docx_name": "案例-戊诉己交通事故案-营运车辆停运损失.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己交通事故案-营运车辆停运损失.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己交通事故案-营运车辆停运损失.json"
+    },
+    {
+        "docx_name": "案例-戊诉己保管合同案-保管物丢失.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己保管合同案-保管物丢失.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己保管合同案-保管物丢失.json"
+    },
+    {
+        "docx_name": "案例-戊诉己健康权纠纷案-校园欺凌.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己健康权纠纷案-校园欺凌.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己健康权纠纷案-校园欺凌.json"
+    },
+    {
+        "docx_name": "案例-戊诉己合同纠纷案-格式条款.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己合同纠纷案-格式条款.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己合同纠纷案-格式条款.json"
+    },
+    {
+        "docx_name": "案例-戊诉己抚养费纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己抚养费纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己抚养费纠纷案.json"
+    },
+    {
+        "docx_name": "案例-戊诉己收养关系纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己收养关系纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己收养关系纠纷案.json"
+    },
+    {
+        "docx_name": "案例-戊诉己服务合同案-教育培训退款.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己服务合同案-教育培训退款.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己服务合同案-教育培训退款.json"
+    },
+    {
+        "docx_name": "案例-戊诉己民间借贷纠纷案-利息约定.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己民间借贷纠纷案-利息约定.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己民间借贷纠纷案-利息约定.json"
+    },
+    {
+        "docx_name": "案例-戊诉己物件脱落、坠落损害责任案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己物件脱落、坠落损害责任案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己物件脱落、坠落损害责任案.json"
+    },
+    {
+        "docx_name": "案例-戊诉己租赁合同案-优先购买权.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己租赁合同案-优先购买权.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己租赁合同案-优先购买权.json"
+    },
+    {
+        "docx_name": "案例-戊诉己租赁合同案-转租.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己租赁合同案-转租.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己租赁合同案-转租.json"
+    },
+    {
+        "docx_name": "案例-戊诉己继承纠纷案-遗嘱效力.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己继承纠纷案-遗嘱效力.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己继承纠纷案-遗嘱效力.json"
+    },
+    {
+        "docx_name": "案例-戊诉己肖像权纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己肖像权纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己肖像权纠纷案.json"
+    },
+    {
+        "docx_name": "案例-戊诉己行纪合同案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己行纪合同案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己行纪合同案.json"
+    },
+    {
+        "docx_name": "案例-戊诉己证券公司证券交易纠纷案-内幕交易.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己证券公司证券交易纠纷案-内幕交易.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己证券公司证券交易纠纷案-内幕交易.json"
+    },
+    {
+        "docx_name": "案例-戊诉己财产损害赔偿案-相邻权.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己财产损害赔偿案-相邻权.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己财产损害赔偿案-相邻权.json"
+    },
+    {
+        "docx_name": "案例-戊诉己违反安全保障义务案-游泳馆.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己违反安全保障义务案-游泳馆.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己违反安全保障义务案-游泳馆.json"
+    },
+    {
+        "docx_name": "案例-戊诉己银行储蓄合同案-存款被盗.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉己银行储蓄合同案-存款被盗.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉己银行储蓄合同案-存款被盗.json"
+    },
+    {
+        "docx_name": "案例-戊诉某银行金融消费者权益案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-戊诉某银行金融消费者权益案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-戊诉某银行金融消费者权益案.json"
+    },
+    {
+        "docx_name": "案例-曹某合同诈骗案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-曹某合同诈骗案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-曹某合同诈骗案.json"
+    },
+    {
+        "docx_name": "案例-朱某强奸案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-朱某强奸案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-朱某强奸案.json"
+    },
+    {
+        "docx_name": "案例-李某失火案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-李某失火案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-李某失火案.json"
+    },
+    {
+        "docx_name": "案例-李某抢劫案-入户抢劫.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-李某抢劫案-入户抢劫.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-李某抢劫案-入户抢劫.json"
+    },
+    {
+        "docx_name": "案例-李某拒不履行信息网络安全管理义务案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-李某拒不履行信息网络安全管理义务案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-李某拒不履行信息网络安全管理义务案.json"
+    },
+    {
+        "docx_name": "案例-李某诉某公司劳动争议案-劳务派遣.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-李某诉某公司劳动争议案-劳务派遣.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-李某诉某公司劳动争议案-劳务派遣.json"
+    },
+    {
+        "docx_name": "案例-李某诉某公司未签劳动合同双倍工资案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-李某诉某公司未签劳动合同双倍工资案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-李某诉某公司未签劳动合同双倍工资案.json"
+    },
+    {
+        "docx_name": "案例-李某非法经营案-外汇.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-李某非法经营案-外汇.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-李某非法经营案-外汇.json"
+    },
+    {
+        "docx_name": "案例-村民诉某矿业公司环境污染责任案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-村民诉某矿业公司环境污染责任案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-村民诉某矿业公司环境污染责任案.json"
+    },
+    {
+        "docx_name": "案例-杨某非法经营案-烟草.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-杨某非法经营案-烟草.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-杨某非法经营案-烟草.json"
+    },
+    {
+        "docx_name": "案例-某公益组织诉某企业环境公益诉讼案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某公益组织诉某企业环境公益诉讼案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某公益组织诉某企业环境公益诉讼案.json"
+    },
+    {
+        "docx_name": "案例-某养殖场诉环保局行政处罚案-环评.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某养殖场诉环保局行政处罚案-环评.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某养殖场诉环保局行政处罚案-环评.json"
+    },
+    {
+        "docx_name": "案例-某化工厂诉环保局行政处罚案-排放超标.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某化工厂诉环保局行政处罚案-排放超标.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某化工厂诉环保局行政处罚案-排放超标.json"
+    },
+    {
+        "docx_name": "案例-某市检察院诉某企业大气污染民事公益诉讼案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某市检察院诉某企业大气污染民事公益诉讼案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某市检察院诉某企业大气污染民事公益诉讼案.json"
+    },
+    {
+        "docx_name": "案例-某村民委员会诉某公司生态破坏责任案-林地.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某村民委员会诉某公司生态破坏责任案-林地.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某村民委员会诉某公司生态破坏责任案-林地.json"
+    },
+    {
+        "docx_name": "案例-某村民小组诉县政府土地征收补偿案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某村民小组诉县政府土地征收补偿案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某村民小组诉县政府土地征收补偿案.json"
+    },
+    {
+        "docx_name": "案例-某环保局申请强制执行行政处罚案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某环保局申请强制执行行政处罚案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某环保局申请强制执行行政处罚案.json"
+    },
+    {
+        "docx_name": "案例-某科技公司数据泄露案-行政责任.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-某科技公司数据泄露案-行政责任.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-某科技公司数据泄露案-行政责任.json"
+    },
+    {
+        "docx_name": "案例-王某帮助信息网络犯罪活动案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某帮助信息网络犯罪活动案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某帮助信息网络犯罪活动案.json"
+    },
+    {
+        "docx_name": "案例-王某诉某公司劳动争议案-女职工保护.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某诉某公司劳动争议案-女职工保护.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某诉某公司劳动争议案-女职工保护.json"
+    },
+    {
+        "docx_name": "案例-王某诉某公司社会保险争议案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某诉某公司社会保险争议案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某诉某公司社会保险争议案.json"
+    },
+    {
+        "docx_name": "案例-王某贩卖毒品案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某贩卖毒品案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某贩卖毒品案.json"
+    },
+    {
+        "docx_name": "案例-王某重婚案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某重婚案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某重婚案.json"
+    },
+    {
+        "docx_name": "案例-王某非法吸收公众存款案-养老诈骗.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某非法吸收公众存款案-养老诈骗.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某非法吸收公众存款案-养老诈骗.json"
+    },
+    {
+        "docx_name": "案例-王某非法获取计算机信息系统数据案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-王某非法获取计算机信息系统数据案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-王某非法获取计算机信息系统数据案.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司不正当竞争案-商业秘密.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司不正当竞争案-商业秘密.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司不正当竞争案-商业秘密.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司专利侵权案-外观设计.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司专利侵权案-外观设计.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司专利侵权案-外观设计.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司买卖合同案-逾期交货.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司买卖合同案-逾期交货.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司买卖合同案-逾期交货.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司买卖合同纠纷案-质量异议.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司买卖合同纠纷案-质量异议.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司买卖合同纠纷案-质量异议.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司合同纠纷案-情势变更.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司合同纠纷案-情势变更.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司合同纠纷案-情势变更.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司合同纠纷案-违约金过高.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司合同纠纷案-违约金过高.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司合同纠纷案-违约金过高.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司商业秘密案-客户名单.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司商业秘密案-客户名单.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司商业秘密案-客户名单.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司商标侵权案-驰名商标.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司商标侵权案-驰名商标.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司商标侵权案-驰名商标.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司承揽合同案-验收异议.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司承揽合同案-验收异议.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司承揽合同案-验收异议.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司承揽合同纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司承揽合同纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司承揽合同纠纷案.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司股东出资纠纷案-抽逃出资.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司股东出资纠纷案-抽逃出资.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司股东出资纠纷案-抽逃出资.json"
+    },
+    {
+        "docx_name": "案例-甲公司诉乙公司软件著作权侵权案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲公司诉乙公司软件著作权侵权案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲公司诉乙公司软件著作权侵权案.json"
+    },
+    {
+        "docx_name": "案例-甲股东诉乙公司关联交易损害责任案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲股东诉乙公司关联交易损害责任案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲股东诉乙公司关联交易损害责任案.json"
+    },
+    {
+        "docx_name": "案例-甲股东诉乙公司知情权纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲股东诉乙公司知情权纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲股东诉乙公司知情权纠纷案.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙交通事故责任案-电动车.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙交通事故责任案-电动车.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙交通事故责任案-电动车.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙人格权纠纷案-姓名权.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙人格权纠纷案-姓名权.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙人格权纠纷案-姓名权.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙仓储合同案-货物损坏.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙仓储合同案-货物损坏.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙仓储合同案-货物损坏.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙保险公司保险合同纠纷案-如实告知.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙保险公司保险合同纠纷案-如实告知.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙保险公司保险合同纠纷案-如实告知.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙保险公司意外险理赔案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙保险公司意外险理赔案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙保险公司意外险理赔案.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙保险公司车险理赔案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙保险公司车险理赔案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙保险公司车险理赔案.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙借款合同案-利息约定不明.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙借款合同案-利息约定不明.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙借款合同案-利息约定不明.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙借款合同案-夫妻共同债务.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙借款合同案-夫妻共同债务.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙借款合同案-夫妻共同债务.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙公共场所管理人责任案-商场摔伤.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙公共场所管理人责任案-商场摔伤.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙公共场所管理人责任案-商场摔伤.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙合伙协议案-利润分配.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙合伙协议案-利润分配.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙合伙协议案-利润分配.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙定金纠纷案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙定金纠纷案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙定金纠纷案.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙居间合同案-跳单.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙居间合同案-跳单.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙居间合同案-跳单.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙校园伤害责任案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙校园伤害责任案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙校园伤害责任案.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙物业服务合同案-车位纠纷.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙物业服务合同案-车位纠纷.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙物业服务合同案-车位纠纷.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙离婚案-家庭主妇家务补偿.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙离婚案-家庭主妇家务补偿.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙离婚案-家庭主妇家务补偿.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙离婚案-家庭暴力举证.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙离婚案-家庭暴力举证.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙离婚案-家庭暴力举证.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙离婚案-家暴举证.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙离婚案-家暴举证.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙离婚案-家暴举证.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙离婚案-彩礼返还.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙离婚案-彩礼返还.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙离婚案-彩礼返还.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙网络侵权案-名誉权.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙网络侵权案-名誉权.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙网络侵权案-名誉权.json"
+    },
+    {
+        "docx_name": "案例-甲诉乙赠与合同纠纷案-附义务赠与.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉乙赠与合同纠纷案-附义务赠与.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉乙赠与合同纠纷案-附义务赠与.json"
+    },
+    {
+        "docx_name": "案例-甲诉某人社局工伤认定案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某人社局工伤认定案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某人社局工伤认定案.json"
+    },
+    {
+        "docx_name": "案例-甲诉某公司劳动争议案-经济性裁员.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某公司劳动争议案-经济性裁员.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某公司劳动争议案-经济性裁员.json"
+    },
+    {
+        "docx_name": "案例-甲诉某公司劳动争议案-违法调岗.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某公司劳动争议案-违法调岗.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某公司劳动争议案-违法调岗.json"
+    },
+    {
+        "docx_name": "案例-甲诉某公安局行政拘留案-程序违法.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某公安局行政拘留案-程序违法.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某公安局行政拘留案-程序违法.json"
+    },
+    {
+        "docx_name": "案例-甲诉某医院医疗损害案-误诊.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某医院医疗损害案-误诊.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某医院医疗损害案-误诊.json"
+    },
+    {
+        "docx_name": "案例-甲诉某市公安局行政处罚案-程序违法.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某市公安局行政处罚案-程序违法.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某市公安局行政处罚案-程序违法.json"
+    },
+    {
+        "docx_name": "案例-甲诉某电商平台产品质量案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某电商平台产品质量案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某电商平台产品质量案.json"
+    },
+    {
+        "docx_name": "案例-甲诉某规划局规划许可案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-甲诉某规划局规划许可案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-甲诉某规划局规划许可案.json"
+    },
+    {
+        "docx_name": "案例-秦某开设赌场案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-秦某开设赌场案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-秦某开设赌场案.json"
+    },
+    {
+        "docx_name": "案例-许某非法拘禁案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-许某非法拘禁案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-许某非法拘禁案.json"
+    },
+    {
+        "docx_name": "案例-谢某生产、销售有毒、有害食品案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-谢某生产、销售有毒、有害食品案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-谢某生产、销售有毒、有害食品案.json"
+    },
+    {
+        "docx_name": "案例-赵某交通肇事案-逃逸致人死亡.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某交通肇事案-逃逸致人死亡.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某交通肇事案-逃逸致人死亡.json"
+    },
+    {
+        "docx_name": "案例-赵某侵犯著作权案-盗版软件.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某侵犯著作权案-盗版软件.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某侵犯著作权案-盗版软件.json"
+    },
+    {
+        "docx_name": "案例-赵某信用卡诈骗案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某信用卡诈骗案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某信用卡诈骗案.json"
+    },
+    {
+        "docx_name": "案例-赵某拒不支付劳动报酬案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某拒不支付劳动报酬案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某拒不支付劳动报酬案.json"
+    },
+    {
+        "docx_name": "案例-赵某破坏计算机信息系统案-删改数据.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某破坏计算机信息系统案-删改数据.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某破坏计算机信息系统案-删改数据.json"
+    },
+    {
+        "docx_name": "案例-赵某诉某公司劳动争议案-加班费举证.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某诉某公司劳动争议案-加班费举证.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某诉某公司劳动争议案-加班费举证.json"
+    },
+    {
+        "docx_name": "案例-赵某诉某建筑公司工伤保险待遇案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-赵某诉某建筑公司工伤保险待遇案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-赵某诉某建筑公司工伤保险待遇案.json"
+    },
+    {
+        "docx_name": "案例-郑某危险驾驶案-醉驾.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-郑某危险驾驶案-醉驾.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-郑某危险驾驶案-醉驾.json"
+    },
+    {
+        "docx_name": "案例-郑某非法行医案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-郑某非法行医案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-郑某非法行医案.json"
+    },
+    {
+        "docx_name": "案例-郑某高空抛物案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-郑某高空抛物案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-郑某高空抛物案.json"
+    },
+    {
+        "docx_name": "案例-钱某受贿案-国家工作人员.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-钱某受贿案-国家工作人员.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-钱某受贿案-国家工作人员.json"
+    },
+    {
+        "docx_name": "案例-钱某诉某公司年休假工资案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-钱某诉某公司年休假工资案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-钱某诉某公司年休假工资案.json"
+    },
+    {
+        "docx_name": "案例-钱某走私、贩卖毒品案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-钱某走私、贩卖毒品案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-钱某走私、贩卖毒品案.json"
+    },
+    {
+        "docx_name": "案例-陈某危险驾驶案-追逐竞驶.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-陈某危险驾驶案-追逐竞驶.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-陈某危险驾驶案-追逐竞驶.json"
+    },
+    {
+        "docx_name": "案例-陈某拒不执行判决案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-陈某拒不执行判决案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-陈某拒不执行判决案.json"
+    },
+    {
+        "docx_name": "案例-陈某网络诽谤案-自诉转公诉.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-陈某网络诽谤案-自诉转公诉.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-陈某网络诽谤案-自诉转公诉.json"
+    },
+    {
+        "docx_name": "案例-陈某诈骗案-网络诈骗.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-陈某诈骗案-网络诈骗.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-陈某诈骗案-网络诈骗.json"
+    },
+    {
+        "docx_name": "案例-陈某非法采矿案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-陈某非法采矿案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-陈某非法采矿案.json"
+    },
+    {
+        "docx_name": "案例-韩某过失致人死亡案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-韩某过失致人死亡案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-韩某过失致人死亡案.json"
+    },
+    {
+        "docx_name": "案例-马某故意伤害致死案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-马某故意伤害致死案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-马某故意伤害致死案.json"
+    },
+    {
+        "docx_name": "案例-马某诉某公司劳动争议案-试用期.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-马某诉某公司劳动争议案-试用期.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-马某诉某公司劳动争议案-试用期.json"
+    },
+    {
+        "docx_name": "案例-马某诉某公司违法解除劳动合同案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-马某诉某公司违法解除劳动合同案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-马某诉某公司违法解除劳动合同案.json"
+    },
+    {
+        "docx_name": "案例-马某走私案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-马某走私案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-马某走私案.json"
+    },
+    {
+        "docx_name": "案例-黄某组织他人偷越国境案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-黄某组织他人偷越国境案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-黄某组织他人偷越国境案.json"
+    },
+    {
+        "docx_name": "案例-黄某聚众斗殴案.docx",
+        "full_path": "D:/github/RAG法律/data/案例/案例-黄某聚众斗殴案.docx",
+        "type": "case",
+        "output_json": "D:\\github\\RAG法律\\data\\case_json/案例-黄某聚众斗殴案.json"
+    }
+]

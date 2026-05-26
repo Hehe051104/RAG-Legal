@@ -6,7 +6,9 @@
       "Bash(git *)",
       "Bash(python \"process+injest\\(一键批量完成\\).py\")",
       "Bash(D:/anaconda/envs/drl/python.exe *)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api *)"
     ]
   }
 }

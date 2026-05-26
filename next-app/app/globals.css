@@ -388,6 +388,38 @@ textarea:focus-visible {
     monospace !important;
 }
 
+/* 法律文档样式优化 */
+.prose h2 {
+  @apply mt-4 mb-2 text-[14px] font-semibold text-foreground/90;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25rem;
+}
+
+.prose h3 {
+  @apply mt-3 mb-1.5 text-[13px] font-medium text-foreground/85;
+}
+
+.prose blockquote {
+  @apply border-l-2 border-primary/30 pl-3 py-1 my-2 bg-muted/30 rounded-r-md text-[12px];
+}
+
+.prose table {
+  @apply text-[12px] my-2;
+}
+
+.prose th {
+  @apply bg-muted/50 font-medium px-2 py-1.5 text-left;
+}
+
+.prose td {
+  @apply px-2 py-1.5 border-t border-border/20;
+}
+
+/* 引用法条样式 */
+.prose em {
+  @apply not-italic text-muted-foreground/70 text-[11px];
+}
+
 .cm-gutters {
   @apply bg-transparent! border-r-0! outline-hidden!;
 }
