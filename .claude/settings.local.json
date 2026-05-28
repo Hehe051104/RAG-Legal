@@ -22,7 +22,15 @@
       "PowerShell(& \"D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe\" \"D:\\\\github\\\\RAG法律\\\\scripts\\\\test_search.py\")",
       "Bash(npx tsc *)",
       "PowerShell(Get-Item *)",
-      "Bash(Select-String -NotMatch \"node_modules|__pycache__|\\\\.next|package-lock\")"
+      "Bash(Select-String -NotMatch \"node_modules|__pycache__|\\\\.next|package-lock\")",
+      "Bash(python *)",
+      "Bash(D:\\\\anaconda\\\\envs\\\\drl\\\\python.exe *)",
+      "Read(//d/anaconda/envs/drl/**)",
+      "Bash(python.exe -m pip install requests beautifulsoup4 python-docx)",
+      "Bash(conda activate *)",
+      "Bash(curl -s \"https://api.github.com/repos/THUIR/LeCaRDv2\")",
+      "Bash(curl -s \"https://api.github.com/repos/THUIR/LeCaRDv2/readme\")",
+      "Bash(curl *)"
     ]
   }
 }
