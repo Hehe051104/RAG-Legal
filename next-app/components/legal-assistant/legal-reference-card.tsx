@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDownIcon, ChevronUpIcon, ScaleIcon, BookOpenIcon, BriefcaseIcon, FileTextIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, ScaleIcon, BookOpenIcon, BriefcaseIcon, FileTextIcon, CopyIcon, CheckIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { LegalReference } from "./api";
@@ -53,24 +53,37 @@ function DocTypeBadge({ docType }: { docType?: string }) {
 
 export function LegalReferenceCard({ reference }: { reference: LegalReference }) {
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const contentPreview = reference.content.length > 120 && !expanded
     ? `${reference.content.slice(0, 120)}...`
     : reference.content;
 
   const hierarchy = reference.hierarchy;
   const pathParts = [hierarchy?.book, hierarchy?.chapter, hierarchy?.section].filter(Boolean);
-  const pathStr = pathParts.length > 0 ? ` > ${pathParts.join(" > ")}` : "";
+  const pathStr = pathParts.length > 0 ? pathParts.join(" > ") : "";
 
-  // 根据文档类型设置不同的左边框颜色
   const borderColor = {
     law: "border-l-blue-500",
     interpretation: "border-l-purple-500",
     case: "border-l-amber-500",
   }[reference.doc_type || "law"] || "border-l-gray-300";
 
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const text = `《${reference.source}》${reference.article}\n${reference.content}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
   return (
     <div className={cn(
-      "rounded-lg border border-border/30 bg-card/70 shadow-[var(--shadow-card)] transition-colors hover:border-border/50 border-l-2",
+      "rounded-lg border border-border/30 bg-card/70 shadow-[var(--shadow-card)] transition-all hover:border-border/50 hover:shadow-md border-l-2",
       borderColor
     )}>
       <button
@@ -94,36 +107,55 @@ export function LegalReferenceCard({ reference }: { reference: LegalReference })
             <ScoreBadge score={reference.score} />
           </div>
 
-          {pathStr ? (
+          {pathStr && (
             <p className="mt-0.5 truncate text-[10px] text-muted-foreground/70">
-              路径：{reference.source}{pathStr}
+              {reference.source} > {pathStr}
             </p>
-          ) : null}
+          )}
 
-          {!expanded ? (
+          {!expanded && (
             <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
               {contentPreview}
             </p>
-          ) : null}
+          )}
         </div>
 
-        <div className="mt-0.5 shrink-0 text-muted-foreground/60">
-          {expanded ? <ChevronUpIcon className="size-3.5" /> : <ChevronDownIcon className="size-3.5" />}
+        <div className="flex items-center gap-1 shrink-0">
+          {expanded && (
+            <button
+              onClick={handleCopy}
+              className="rounded p-1 text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors"
+              title="复制引用"
+            >
+              {copied ? (
+                <CheckIcon className="size-3 text-emerald-500" />
+              ) : (
+                <CopyIcon className="size-3" />
+              )}
+            </button>
+          )}
+          <div className="text-muted-foreground/60">
+            {expanded ? <ChevronUpIcon className="size-3.5" /> : <ChevronDownIcon className="size-3.5" />}
+          </div>
         </div>
       </button>
 
-      {expanded ? (
+      {expanded && (
         <div className="border-t border-border/20 px-3 py-2.5">
-          <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground/90">
+          <div className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground/90">
             {reference.content}
-          </p>
-          {reference.method ? (
-            <p className="mt-2 text-[10px] text-muted-foreground/60">
-              召回方式：{reference.method}
-            </p>
-          ) : null}
+          </div>
+          <div className="mt-2.5 flex items-center justify-between text-[10px] text-muted-foreground/50">
+            <span>召回方式：{reference.method || "未知"}</span>
+            {reference.doc_type === "case" && (
+              <span className="flex items-center gap-1">
+                <BriefcaseIcon className="size-3" />
+                案例参考
+              </span>
+            )}
+          </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

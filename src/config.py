@@ -1,5 +1,9 @@
+import os
 import torch
 from pathlib import Path
+
+# 设置HuggingFace镜像
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
 # 项目根目录：src/ 的上一级
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

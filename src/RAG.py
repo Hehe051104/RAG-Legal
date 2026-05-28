@@ -97,90 +97,53 @@ def _history_to_prompt_text(history: List[Any], max_messages: int) -> str:
     )
 
 def rewrite_query(user_query, history, model_name):
-    print("\n正在分析用户意图并重写查询...")
+    “””分析用户意图，生成结构化搜索指令。
 
-    # 保持原有“最近两轮上下文”的语义，按消息数约等于最近 4 条
+    返回格式：
+    领域:刑事|【中华人民共和国刑法-第二百六十四条】|法律关键词:盗窃罪、数额较大、入户盗窃|案例关键词:盗窃、入户、量刑
+    “””
+    print(“\n正在分析用户意图并重写查询...”)
+
     history_str = _history_to_prompt_text(history, max_messages=8)
-
-    # 动态获取菜单
     available_laws_list, available_cases_list = get_available_laws()
 
-    # --- 核心改动：把清单加入 Prompt，并强约束它的输出 ---
-    prompt = f"""你是一个顶级的法律咨询意图解析器。请结合【对话历史】，将用户的【最新提问】改写为一个独立的搜索语句。
+    prompt = f”””你是一个顶级的法律咨询意图解析器。请结合【对话历史】，将用户的【最新提问】改写为结构化搜索指令。
 
-【系统内部通讯唯一合法暗号（必须严格遵守）】
-你输出的法条标签必须严格使用：
-【法律名-第xxx条】
+【输出格式（严格遵守）】
+领域:XXX|【法律名-第xxx条】|法律关键词:A、B、C|案例关键词:D、E、F
 
-严禁输出以下任何非法格式：
-- 【法律名 第xxx条】
-- 【法律名第xxx条】
-- 法律名:第xxx条
-- 其他不带中括号或不带横杠的写法
+三个部分用|分隔：
+1. 领域: 刑事/民事/行政/劳动/知识产权/商事/国家赔偿 之一
+2. 【法律名-第xxx条】: 精准标签（如有）
+3. 法律关键词: 3-5个用于搜索法律/解释的术语
+4. 案例关键词: 3-5个用于搜索类似案例的术语（案由、行为、争议焦点）
 
-只要你判断出了法律名和条号，就必须使用带横杠的标准格式输出。
+【红线规则】
+1) 数字不可改写：用户说”第二条”就输出”第二条”，不可变成其他条号
+2) 禁止过度联想：用户没说具体罪名，不要脑补
+3) 领域判断优先：先判断属于什么法律领域，再选法律
 
-【红线规则（绝对优先，违反即判错）】
-1) 数字神圣不可侵犯：
-    - 如果用户提问中包含明确条号数字（如“第二条”“第10条”“第十条”），你输出标签时必须且只能使用该数字对应的条号。
-    - 严禁以任何理由改写、放大、缩小或替换数字（例如把“第二条”改成“第二百三十二条”）。
-
-2) 禁止过度联想：
-    - 当用户提问非常简洁（如“刑法第二条”）时，只提取该条目的核心法律含义关键词。
-    - 在用户没有明确提及“杀人”“抢劫”等行为时，严禁自行脑补具体罪名。
-
-3) 指令优先级：
-    - 用户输入中的显式数字优先级最高，高于任何示例、经验规则和上下文推断。
-    - 若示例与用户显式数字冲突，必须以用户输入数字为准。
-
-【Few-Shot 少样本示例（用于格式演示，不得覆盖用户显式数字）】
-示例1：
+【示例】
 输入：刑法第二条
-输出：【中华人民共和国刑法-第二条】刑法适用范围、法律适用、基本原则
+输出：领域:刑事|【中华人民共和国刑法-第二条】|法律关键词:刑法任务、基本原则、适用范围|案例关键词:刑法适用
 
-示例2：
 输入：我高空抛物了
-输出：【中华人民共和国民法典-第一千二百五十四条】高空抛物、侵权责任、过错认定、损害赔偿、举证责任
+输出：领域:民事|【中华人民共和国民法典-第一千二百五十四条】|法律关键词:高空抛物、侵权责任、建筑物管理人|案例关键词:高空抛物、损害赔偿、过错推定
 
-示例3：
-输入：我杀人了
-输出：【中华人民共和国刑法-第二百三十二条】故意杀人、刑事责任、量刑标准、主观故意、从重从轻情节
+输入：公司不给我加班费怎么办
+输出：领域:劳动|【中华人民共和国劳动法-第四十四条】|法律关键词:加班费、工资报酬、劳动争议|案例关键词:加班费、劳动仲裁、考勤记录
 
-【任务一：格式化法条标签（精准检索专用）】
-1. 格式严格为：【法律名-第xxx条】。
-2. 提取准则：必须严格提取【最新提问】中的数字并转为中文大写，不得改写为其他条号。
-3. 法律名判定：
-   - ⚠️ **话题漂移判定**：先判断【最新提问】是否开启了与【对话历史】完全不同的法律领域（如从民事转为刑事）。
-   - 如果发生领域大跨度跳转，请果断放弃沿用，将法律名写为“未知”。
-   - 只有在逻辑高度连贯（如都在聊离婚或都在聊合同）时，才允许沿用法律名。
+输入：我在网上被骗了5000块钱
+输出：领域:刑事|【中华人民共和国刑法-第二百六十六条】|法律关键词:诈骗罪、数额较大、网络诈骗|案例关键词:诈骗、网络犯罪、立案标准
 
-【任务二：语义重写（向量搜索专用）】
-在标签后增加 3-5 个关键词，必须遵循以下“法学专家”原则：
-1. **领域分诊**：先在内心判断这是刑事、民事还是行政。
-2. **动词优先**：必须保留用户行为的核心动词（如：杀害、抢劫、自首、坠落、违约）。**严禁将刑事动作（杀人）弱化为民事权利（生命权）。**
-3. **术语转化**：将口语（我不小心弄坏了）转化为术语（财产损害、过失侵权）。
+输入：二手房买卖跳单
+输出：领域:民事|【指导案例1号】|法律关键词:居间合同、违约责任|案例关键词:二手房、跳单、中介费
 
-4. **案例关联**：
-   - 当用户描述具体案情（如"我被公司辞退了""我在网上被骗了"）时，生成【指导案例X号】格式的标签指向最相关的案例。
-   - 当用户问"XX案例怎么判"或提到具体案例名时，直接生成对应案例标签。
-   - 同时增加案例相关语义关键词（如：工伤认定、交通事故、合同违约）。
-
-5. **案例标签格式**：案例标签格式为【案例-关键词】或【指导案例X号】。
-
-6. **法律争点识别**：在关键词中识别并标注核心法律争点。
-   示例：
-   输入：公司不给我加班费怎么办
-   输出：【中华人民共和国劳动法-第四十四条】加班费、劳动争议、举证责任、考勤记录
-
-   输入：二手房买卖跳单
-   输出：【指导案例1号】居间合同、二手房买卖、违约、中介费
-
-   输入：我在网上被骗了5000块钱
-   输出：【中华人民共和国刑法-第二百六十六条】诈骗罪、网络诈骗、刑事责任、立案标准
+输入：盗窃罪怎么判
+输出：领域:刑事|【中华人民共和国刑法-第二百六十四条】|法律关键词:盗窃罪、量刑标准、数额较大|案例关键词:盗窃、量刑、从轻从重
 
 【本地可用法律清单】：
 {available_laws_list}
-
 
 【本地可用案例清单】：
 {available_cases_list}
@@ -191,40 +154,99 @@ def rewrite_query(user_query, history, model_name):
 【最新提问】：
 {user_query}
 
-请直接输出改写后的结果（标签 + 关键词）："""
+请直接输出结构化搜索指令：”””
 
-    payload = {"model": model_name, "prompt": prompt, "stream": False}
+    payload = {“model”: model_name, “prompt”: prompt, “stream”: False}
     try:
-        response = requests.post("http://localhost:11434/api/generate", json=payload)
-        return response.json().get("response", user_query).strip()
+        response = requests.post(“http://localhost:11434/api/generate”, json=payload)
+        result = response.json().get(“response”, “”).strip()
+        if result:
+            print(f”改写结果: {result}”)
+            return result
+        return user_query
     except Exception as e:
-        print(f"大模型请求失败: {e}")
+        print(f”大模型请求失败: {e}”)
         return user_query
 
+
+def parse_rewrite_result(rewrite_text):
+    “””解析改写结果，提取领域、标签、关键词。
+
+    返回: {
+        'domain': '刑事',
+        'tags': ['【中华人民共和国刑法-第二百六十四条】'],
+        'law_keywords': '盗窃罪、数额较大、入户盗窃',
+        'case_keywords': '盗窃、入户、量刑',
+        'raw': '原始文本'
+    }
+    “””
+    result = {
+        'domain': '',
+        'tags': [],
+        'law_keywords': '',
+        'case_keywords': '',
+        'raw': rewrite_text
+    }
+
+    if not rewrite_text:
+        return result
+
+    # 提取领域
+    domain_match = re.search(r'领域[:：]\s*(刑事|民事|行政|劳动|知识产权|商事|国家赔偿)', rewrite_text)
+    if domain_match:
+        result['domain'] = domain_match.group(1)
+
+    # 提取标签
+    result['tags'] = re.findall(r'【([^】]+)】', rewrite_text)
+
+    # 提取法律关键词
+    law_kw_match = re.search(r'法律关键词[:：]\s*(.+?)(?:\|案例关键词|$)', rewrite_text)
+    if law_kw_match:
+        result['law_keywords'] = law_kw_match.group(1).strip()
+
+    # 提取案例关键词
+    case_kw_match = re.search(r'案例关键词[:：]\s*(.+?)$', rewrite_text)
+    if case_kw_match:
+        result['case_keywords'] = case_kw_match.group(1).strip()
+
+    # 如果没有结构化格式，回退：整个文本作为关键词
+    if not result['domain'] and not result['tags']:
+        result['law_keywords'] = rewrite_text
+        result['case_keywords'] = rewrite_text
+
+    return result
+
 def call_ollama_rag(query_text, retrieved_docs,history,model_name):
-    context = ""
+    context = “”
     for i, item in enumerate(retrieved_docs):
         meta = item['metadata']
         content = item['content']
         source = meta.get('source', '未知来源')
         doc_type = meta.get('doc_type', 'law')
-        levels = [meta.get("book", ""), meta.get("subbook", ""),
-              meta.get("chapter", ""), meta.get("section", "")]
-        path = f"{source} >" + " > ".join([l for l in levels if l])
 
         # 标注文档类型
-        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "法律依据")
-        context += f"【{i+1}】[{type_label}] 来源：{path} > {meta['article_number']}\n原文：{content}\n\n"
+        type_label = {“law”: “法律条文”, “interpretation”: “司法解释”, “case”: “案例”}.get(doc_type, “法律依据”)
+
+        # 构建来源路径
+        if doc_type == “case”:
+            case_number = meta.get('case_number', '')
+            court = meta.get('court', '')
+            date = meta.get('date', '')
+            path = f”{court} {case_number} {date}”.strip()
+        else:
+            path = source
+
+        context += f”【{i+1}】[{type_label}] {path}\n{content}\n\n”
 
     # 保持原有”最近三轮上下文”的语义，按消息数约等于最近 6 条
     history_context = _history_to_prompt_text(history, max_messages=10)
-    prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
+    prompt = f”””你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
 
 【IRAC分析框架】：
 - Issue（法律争点）：识别用户问题中的核心法律争议点
-- Rule（法律规则）：引用适用的法律条文、司法解释和案例
-- Application（适用分析）：将法律规则与具体事实相结合进行分析
-- Conclusion（结论）：给出明确的法律意见和建议
+- Rule（法律规则）：引用适用的法律条文和司法解释
+- Application（适用分析）：将法律规则与具体事实相结合，参考类似案例的裁判理由
+- Conclusion（结论）：参考裁判要旨，给出明确的法律意见和建议
 
 【对话历史】：
 {history_context}
@@ -242,19 +264,19 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 明确指出用户问题中的核心法律争议点。
 
 ## 二、法律规则（Rule）
-引用【法律依据】中的具体法条、司法解释或案例。格式：
+引用【法律依据】中的法律条文和司法解释：
 - 《法律名》第X条规定：...
-- 根据XX司法解释：...
-- 参考案例：...
+- 根据XX司法解释第X条：...
 
 ## 三、适用分析（Application）
 将法律规则与用户的具体情况进行分析：
-- 事实认定
-- 法律适用分析
+- 事实认定：根据用户描述，认定关键事实
+- 法律适用分析：将法律规则应用于具体事实
+- 类案参考：引用【法律依据】中的类似案例，说明法院如何裁判
 - 有利/不利因素分析
 
 ## 四、结论（Conclusion）
-- 明确的法律意见
+- 参考裁判要旨，给出明确的法律意见
 - 具体建议
 - 风险提示
 
@@ -262,9 +284,10 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 1. 如果用户在询问之前聊过的话题，请直接根据【对话历史】回答。
 2. 必须优先使用【法律依据】中的内容，不得编造法条。
 3. 如果法律依据不足，请如实告知并建议咨询专业律师。
-4. 引用法条时注明具体"条"和来源。
-5. 保持专业、严谨的法律分析风格。
-"""
+4. 引用法条时注明具体”条”和来源。
+5. 参考案例时注明案号和法院。
+6. 保持专业、严谨的法律分析风格。
+“””
 
     # 调用 Ollama
     print(f" 正在链接本地 大语言模型: {model_name}")
@@ -293,20 +316,29 @@ def call_ollama_rag_stream(query_text, retrieved_docs, history, model_name):
         content = item['content']
         source = meta.get('source', '未知来源')
         doc_type = meta.get('doc_type', 'law')
-        levels = [meta.get("book", ""), meta.get("subbook", ""),
-                  meta.get("chapter", ""), meta.get("section", "")]
-        path = f'{source} >' + " > ".join([l for l in levels if l])
+
+        # 标注文档类型
         type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "法律依据")
-        context += f"【{i+1}】[{type_label}] 来源：{path} > {meta['article_number']}\n原文：{content}\n\n"
+
+        # 构建来源路径
+        if doc_type == "case":
+            case_number = meta.get('case_number', '')
+            court = meta.get('court', '')
+            date = meta.get('date', '')
+            path = f"{court} {case_number} {date}".strip()
+        else:
+            path = source
+
+        context += f"【{i+1}】[{type_label}] {path}\n{content}\n\n"
 
     history_context = _history_to_prompt_text(history, max_messages=10)
     prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
 
 【IRAC分析框架】：
 - Issue（法律争点）：识别用户问题中的核心法律争议点
-- Rule（法律规则）：引用适用的法律条文、司法解释和案例
-- Application（适用分析）：将法律规则与具体事实相结合进行分析
-- Conclusion（结论）：给出明确的法律意见和建议
+- Rule（法律规则）：引用适用的法律条文和司法解释
+- Application（适用分析）：将法律规则与具体事实相结合，参考类似案例的裁判理由
+- Conclusion（结论）：参考裁判要旨，给出明确的法律意见和建议
 
 【对话历史】：
 {history_context}
@@ -324,19 +356,19 @@ def call_ollama_rag_stream(query_text, retrieved_docs, history, model_name):
 明确指出用户问题中的核心法律争议点。
 
 ## 二、法律规则（Rule）
-引用【法律依据】中的具体法条、司法解释或案例。格式：
+引用【法律依据】中的法律条文和司法解释：
 - 《法律名》第X条规定：...
-- 根据XX司法解释：...
-- 参考案例：...
+- 根据XX司法解释第X条：...
 
 ## 三、适用分析（Application）
 将法律规则与用户的具体情况进行分析：
-- 事实认定
-- 法律适用分析
+- 事实认定：根据用户描述，认定关键事实
+- 法律适用分析：将法律规则应用于具体事实
+- 类案参考：引用【法律依据】中的类似案例，说明法院如何裁判
 - 有利/不利因素分析
 
 ## 四、结论（Conclusion）
-- 明确的法律意见
+- 参考裁判要旨，给出明确的法律意见
 - 具体建议
 - 风险提示
 
@@ -345,7 +377,8 @@ def call_ollama_rag_stream(query_text, retrieved_docs, history, model_name):
 2. 必须优先使用【法律依据】中的内容，不得编造法条。
 3. 如果法律依据不足，请如实告知并建议咨询专业律师。
 4. 引用法条时注明具体"条"和来源。
-5. 保持专业、严谨的法律分析风格。
+5. 参考案例时注明案号和法院。
+6. 保持专业、严谨的法律分析风格。
 """
 
     url = "http://localhost:11434/api/generate"

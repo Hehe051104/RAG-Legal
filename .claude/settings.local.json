@@ -30,7 +30,13 @@
       "Bash(conda activate *)",
       "Bash(curl -s \"https://api.github.com/repos/THUIR/LeCaRDv2\")",
       "Bash(curl -s \"https://api.github.com/repos/THUIR/LeCaRDv2/readme\")",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(where soffice *)",
+      "Bash(where libreoffice *)",
+      "Bash(HF_ENDPOINT=https://hf-mirror.com D:/anaconda/envs/drl/python.exe scripts/build_vector_store.py)",
+      "Bash(HF_ENDPOINT=https://hf-mirror.com D:/anaconda/envs/drl/python.exe -c ' *)",
+      "Bash(nvidia-smi)",
+      "Bash(powershell *)"
     ]
   }
 }

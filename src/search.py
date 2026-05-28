@@ -117,28 +117,74 @@ def _cosine_similarity(query_emb, corpus_emb):
     return (corpus_norm @ query_norm.T).flatten()
 
 
-def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
-    """Hybrid retrieval: precise tag lookup + vector similarity search.
+def _vector_search(query_text, embeddings, documents, metadata, model, n_results, seen_keys, doc_type_filter=None, method_label="向量召回"):
+    """向量语义搜索，可按doc_type过滤。
 
-    collection_name is ignored (kept for API compatibility).
+    Args:
+        query_text: 搜索关键词
+        embeddings: 向量矩阵
+        documents: 文档列表
+        metadata: 元数据列表
+        model: embedding模型
+        n_results: 返回数量
+        seen_keys: 已见key集合（去重用）
+        doc_type_filter: 过滤doc_type（None=不过滤，"case"=只搜案例，"law_interp"=只搜法律/解释）
+        method_label: 标记检索方法
     """
-    store = _load_vector_store(db_path)
-    model = _load_embedding_model(model_name)
+    if not query_text:
+        return []
 
-    embeddings = store["embeddings"]
-    documents = store["documents"]
-    metadata = store["metadata"]
+    MIN_COSINE_SCORE = -1.0
+    results = []
 
-    print(f"\n搜索 大模型指令: {rewrite_text}")
+    query_emb = model.encode([query_text], prompt_name="query", convert_to_numpy=True).astype(np.float32)
+    scores = _cosine_similarity(query_emb, embeddings)
 
-    final_raw_docs = []
-    seen_keys = set()
-    # threshold: only return results with cosine similarity >= MIN_COSINE_SCORE
-    # Scores can be negative for opposite meanings; 0.3 is a reasonable cutoff
-    MIN_COSINE_SCORE = -1.0  # permissive — reranker will filter low-quality results
+    # 获取更多候选（过滤后可能不够）
+    candidate_k = min(n_results * 3, len(scores)) if doc_type_filter else min(n_results, len(scores))
+    top_indices = np.argpartition(-scores, candidate_k - 1)[:candidate_k]
+    top_indices = top_indices[np.argsort(-scores[top_indices])]
 
-    # --- 1. 精准点名 (tag lookup in metadata) ---
-    tags = re.findall(r'【(.*?)】', rewrite_text)
+    count = 0
+    for idx in top_indices:
+        if scores[idx] < MIN_COSINE_SCORE:
+            continue
+        if count >= n_results:
+            break
+
+        meta = metadata[idx]
+        doc_type = meta.get("doc_type", "law")
+
+        # 按类型过滤
+        if doc_type_filter == "case" and doc_type != "case":
+            continue
+        if doc_type_filter == "law_interp" and doc_type not in ("law", "interpretation"):
+            continue
+
+        key = f"{meta['source']}_{meta['article_number']}"
+        if key not in seen_keys:
+            results.append({
+                "content": documents[idx],
+                "metadata": {
+                    "source": meta["source"],
+                    "article_number": meta["article_number"],
+                    "doc_type": doc_type,
+                    "case_number": meta.get("case_number", ""),
+                    "court": meta.get("court", ""),
+                    "date": meta.get("date", ""),
+                },
+                "method": method_label,
+                "score": float(scores[idx]),
+            })
+            seen_keys.add(key)
+            count += 1
+
+    return results
+
+
+def _tag_lookup(tags, metadata, documents, seen_keys):
+    """精准标签匹配。"""
+    results = []
 
     for tag in tags:
         parsed = parse_precise_tag(tag)
@@ -152,15 +198,20 @@ def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
                 if meta.get('case_number') == case_num or meta.get('article_number') == case_num:
                     key = f"{meta.get('source', '')}_{meta['article_number']}"
                     if key not in seen_keys:
-                        final_raw_docs.append({
+                        results.append({
                             "content": documents[i],
-                            "metadata": {"source": meta["source"], "article_number": meta["article_number"],
-                                         "doc_type": meta.get("doc_type", "law")},
+                            "metadata": {
+                                "source": meta["source"],
+                                "article_number": meta["article_number"],
+                                "doc_type": meta.get("doc_type", "law"),
+                                "case_number": meta.get("case_number", ""),
+                                "court": meta.get("court", ""),
+                                "date": meta.get("date", ""),
+                            },
                             "method": "精准点名",
                         })
                         seen_keys.add(key)
                         print(f" 精准命中案例：{meta.get('source', '')} {meta['article_number']}")
-                        print(f" 内容预览: {documents[i][:60]}...")
             continue
 
         # 法律条文精准检索
@@ -188,43 +239,238 @@ def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
             if is_match:
                 key = f"{db_source}_{meta['article_number']}"
                 if key not in seen_keys:
-                    final_raw_docs.append({
+                    results.append({
                         "content": documents[i],
-                        "metadata": {"source": meta["source"], "article_number": meta["article_number"],
-                                     "doc_type": meta.get("doc_type", "law")},
+                        "metadata": {
+                            "source": meta["source"],
+                            "article_number": meta["article_number"],
+                            "doc_type": meta.get("doc_type", "law"),
+                        },
                         "method": "精准点名",
                     })
                     seen_keys.add(key)
                     print(f" 精准命中：{db_source} {meta['article_number']}")
-                    print(f" 内容预览: {documents[i][:60]}...")
 
-    # --- 2. 向量语义检索 ---
+    return results
+
+
+def run_search(rewrite_text, db_path, collection_name, model_name, n_results):
+    """多路混合检索：标签精准匹配 + 法律向量搜索 + 案例向量搜索 + 关系扩展。
+
+    保证返回结果中包含法律/解释和案例两类文档。
+    """
+    store = _load_vector_store(db_path)
+    model = _load_embedding_model(model_name)
+
+    embeddings = store["embeddings"]
+    documents = store["documents"]
+    metadata = store["metadata"]
+
+    print(f"\n搜索指令: {rewrite_text}")
+
+    final_raw_docs = []
+    seen_keys = set()
+
+    # --- 1. 精准标签匹配 ---
+    tags = re.findall(r'【(.*?)】', rewrite_text)
+    if tags:
+        tag_results = _tag_lookup(tags, metadata, documents, seen_keys)
+        final_raw_docs.extend(tag_results)
+        print(f" 标签匹配：{len(tag_results)} 条")
+
+    # --- 2. 提取搜索关键词 ---
+    # 从结构化改写结果中提取
+    law_keywords = ""
+    case_keywords = ""
+
+    law_kw_match = re.search(r'法律关键词[:：]\s*(.+?)(?:\|案例关键词|$)', rewrite_text)
+    case_kw_match = re.search(r'案例关键词[:：]\s*(.+?)$', rewrite_text)
+
+    if law_kw_match:
+        law_keywords = law_kw_match.group(1).strip()
+    if case_kw_match:
+        case_keywords = case_kw_match.group(1).strip()
+
+    # 去掉标签后的纯文本（回退用）
     pure_query = re.sub(r'【.*?】', '', rewrite_text).strip()
-    if pure_query:
-        print(f"[语义检索] 关键词: {pure_query}")
-        query_emb = model.encode([pure_query], prompt_name="query", convert_to_numpy=True).astype(np.float32)
-        scores = _cosine_similarity(query_emb, embeddings)
+    # 去掉结构化标记
+    pure_query = re.sub(r'领域[:：].*?\|', '', pure_query).strip()
+    pure_query = re.sub(r'(法律|案例)关键词[:：].*?(?:\||$)', '', pure_query).strip()
 
-        # Get top-k indices
-        top_k = min(n_results, len(scores))
-        top_indices = np.argpartition(-scores, top_k - 1)[:top_k]
-        top_indices = top_indices[np.argsort(-scores[top_indices])]
+    # --- 3. 路径A：法律/解释搜索 ---
+    law_query = law_keywords or pure_query
+    if law_query:
+        law_results = _vector_search(
+            law_query, embeddings, documents, metadata, model,
+            n_results=max(n_results // 2, 3),
+            seen_keys=seen_keys,
+            doc_type_filter="law_interp",
+            method_label="法律检索"
+        )
+        final_raw_docs.extend(law_results)
+        print(f" 法律检索：{len(law_results)} 条")
 
-        for idx in top_indices:
-            if scores[idx] < MIN_COSINE_SCORE:
-                continue
-            meta = metadata[idx]
-            key = f"{meta['source']}_{meta['article_number']}"
-            if key not in seen_keys:
-                final_raw_docs.append({
-                    "content": documents[idx],
-                    "metadata": {"source": meta["source"], "article_number": meta["article_number"],
-                                 "doc_type": meta.get("doc_type", "law")},
-                    "method": "向量召回",
-                })
-                seen_keys.add(key)
-    else:
-        print(" [跳过向量搜索] 意图重写仅包含精准标签，无需执行模糊语义检索。")
+    # --- 4. 路径B：案例搜索 ---
+    case_query = case_keywords or pure_query
+    if case_query:
+        case_results = _vector_search(
+            case_query, embeddings, documents, metadata, model,
+            n_results=max(n_results // 2, 3),
+            seen_keys=seen_keys,
+            doc_type_filter="case",
+            method_label="案例检索"
+        )
+        final_raw_docs.extend(case_results)
+        print(f" 案例检索：{len(case_results)} 条")
 
-    print(f"搜索完毕：共抓取 {len(final_raw_docs)} 条法条进入重排。")
+    # --- 5. 如果没有结构化关键词，用统一搜索补充 ---
+    if not law_keywords and not case_keywords and pure_query:
+        # 通用搜索（不过滤类型）
+        general_results = _vector_search(
+            pure_query, embeddings, documents, metadata, model,
+            n_results=n_results,
+            seen_keys=seen_keys,
+            doc_type_filter=None,
+            method_label="向量召回"
+        )
+        final_raw_docs.extend(general_results)
+        print(f" 通用搜索：{len(general_results)} 条")
+
+    print(f"搜索完毕：共 {len(final_raw_docs)} 条进入重排。")
+
+    # --- 6. 关系扩展 ---
+    final_raw_docs = _expand_relations(final_raw_docs, store, seen_keys)
+
     return final_raw_docs
+
+
+def _expand_relations(raw_docs, store, seen_keys, max_expand=3):
+    """从命中结果的关联索引补充相关文档。
+
+    如果命中了法律/解释，但没有案例，补充案例。
+    如果命中了案例，但没有法律/解释，补充法律和解释。
+    """
+    from pathlib import Path
+    ref_path = Path(__file__).resolve().parent.parent / "data" / "reverse_references.json"
+    if not ref_path.exists():
+        return raw_docs
+
+    with open(ref_path, "r", encoding="utf-8") as f:
+        reverse_refs = json.load(f)
+
+    law_to_cases = reverse_refs.get("law_to_cases", {})
+    interp_to_cases = reverse_refs.get("interp_to_cases", {})
+
+    documents = store["documents"]
+    metadata = store["metadata"]
+
+    doc_types = set(d["metadata"].get("doc_type", "") for d in raw_docs)
+    expanded = []
+
+    # 法律/解释 → 案例
+    if "case" not in doc_types:
+        for doc in raw_docs:
+            meta = doc["metadata"]
+            if meta.get("doc_type") in ("law", "interpretation"):
+                source = meta.get("source", "")
+                article = meta.get("article_number", "")
+                key = f"{source}|{article}"
+
+                case_numbers = law_to_cases.get(key, [])
+                if not case_numbers:
+                    case_numbers = interp_to_cases.get(key, [])
+
+                for case_num in case_numbers[:2]:
+                    for i, m in enumerate(metadata):
+                        if m.get("doc_type") == "case" and m.get("case_number") == case_num:
+                            case_key = f"{m.get('source', '')}_{m.get('article_number', '')}"
+                            if case_key not in seen_keys:
+                                expanded.append({
+                                    "content": documents[i],
+                                    "metadata": {
+                                        "source": m["source"],
+                                        "article_number": m["article_number"],
+                                        "doc_type": "case",
+                                        "case_number": m.get("case_number", ""),
+                                        "court": m.get("court", ""),
+                                        "date": m.get("date", ""),
+                                    },
+                                    "method": "关系扩展",
+                                })
+                                seen_keys.add(case_key)
+                                print(f" 关系扩展→案例：{case_num}")
+                                break
+
+    # 案例 → 法律/解释
+    if "law" not in doc_types and "interpretation" not in doc_types:
+        all_records_path = Path(__file__).resolve().parent.parent / "data" / "all_records.json"
+        if all_records_path.exists():
+            with open(all_records_path, "r", encoding="utf-8") as f:
+                all_records = json.load(f)
+
+            case_records = {r["id"]: r for r in all_records if r["doc_type"] == "case"}
+
+            for doc in raw_docs:
+                meta = doc["metadata"]
+                if meta.get("doc_type") != "case":
+                    continue
+
+                case_id = None
+                for i, m in enumerate(metadata):
+                    if m.get("doc_type") == "case" and m.get("case_number") == meta.get("case_number"):
+                        case_id = m.get("id")
+                        break
+
+                if not case_id or case_id not in case_records:
+                    continue
+
+                case_record = case_records[case_id]
+                relations = case_record.get("relations", {})
+
+                # 补充法律
+                for ref in relations.get("laws", [])[:1]:
+                    law_name = ref.get("name", "")
+                    article = ref.get("article", "")
+                    for i, m in enumerate(metadata):
+                        if m.get("doc_type") == "law" and m.get("source") == law_name and m.get("article_number") == article:
+                            key = f"{m.get('source', '')}_{m.get('article_number', '')}"
+                            if key not in seen_keys:
+                                expanded.append({
+                                    "content": documents[i],
+                                    "metadata": {
+                                        "source": m["source"],
+                                        "article_number": m["article_number"],
+                                        "doc_type": "law",
+                                    },
+                                    "method": "关系扩展",
+                                })
+                                seen_keys.add(key)
+                                print(f" 关系扩展→法律：{law_name} {article}")
+                                break
+
+                # 补充解释
+                for ref in relations.get("interpretations", [])[:1]:
+                    interp_name = ref.get("name", "")
+                    article = ref.get("article", "")
+                    for i, m in enumerate(metadata):
+                        if m.get("doc_type") == "interpretation" and m.get("source") == interp_name and m.get("article_number") == article:
+                            key = f"{m.get('source', '')}_{m.get('article_number', '')}"
+                            if key not in seen_keys:
+                                expanded.append({
+                                    "content": documents[i],
+                                    "metadata": {
+                                        "source": m["source"],
+                                        "article_number": m["article_number"],
+                                        "doc_type": "interpretation",
+                                    },
+                                    "method": "关系扩展",
+                                })
+                                seen_keys.add(key)
+                                print(f" 关系扩展→解释：{interp_name} {article}")
+                                break
+
+    if expanded:
+        print(f"关系扩展：补充了 {len(expanded)} 条相关文档")
+        raw_docs.extend(expanded)
+
+    return raw_docs

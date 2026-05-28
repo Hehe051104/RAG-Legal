@@ -1,6 +1,7 @@
 "use client";
 
-import { CopyIcon } from "lucide-react";
+import { CopyIcon, SearchIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { useState } from "react";
 
 import { MessageResponse } from "@/components/ai-elements/message";
 import { SparklesIcon } from "@/components/chat/icons";
@@ -20,24 +21,95 @@ function formatTimestamp(iso: string) {
       }).format(date);
 }
 
+function SearchProcessBadge({ references }: { references: LegalReference[] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const lawCount = references.filter((r) => r.doc_type === "law").length;
+  const interpCount = references.filter((r) => r.doc_type === "interpretation").length;
+  const caseCount = references.filter((r) => r.doc_type === "case").length;
+  const totalCount = references.length;
+
+  const methods = [...new Set(references.map((r) => r.method).filter(Boolean))];
+
+  return (
+    <div className="mb-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1.5 rounded-full border border-border/30 bg-muted/20 px-2.5 py-1 text-[10px] text-muted-foreground transition-colors hover:border-border/50 hover:bg-muted/40"
+      >
+        <SearchIcon className="size-3" />
+        <span>检索到 {totalCount} 条依据</span>
+        {expanded ? (
+          <ChevronUpIcon className="size-3" />
+        ) : (
+          <ChevronDownIcon className="size-3" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="mt-1.5 rounded-lg border border-border/20 bg-muted/10 p-2.5 text-[10px]">
+          <div className="flex flex-wrap gap-3">
+            {lawCount > 0 && (
+              <span className="text-blue-600 dark:text-blue-400">
+                法律条文 ×{lawCount}
+              </span>
+            )}
+            {interpCount > 0 && (
+              <span className="text-purple-600 dark:text-purple-400">
+                司法解释 ×{interpCount}
+              </span>
+            )}
+            {caseCount > 0 && (
+              <span className="text-amber-600 dark:text-amber-400">
+                参考案例 ×{caseCount}
+              </span>
+            )}
+          </div>
+          {methods.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {methods.map((method) => (
+                <span
+                  key={method}
+                  className="rounded-full bg-muted/50 px-2 py-0.5 text-[9px] text-muted-foreground"
+                >
+                  {method}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReferencesByType({ references }: { references: LegalReference[] }) {
-  // 按文档类型分组
   const lawRefs = references.filter((r) => r.doc_type === "law");
   const interpRefs = references.filter((r) => r.doc_type === "interpretation");
   const caseRefs = references.filter((r) => r.doc_type === "case");
 
   const sections = [
-    { title: "法律依据", refs: lawRefs, icon: "§" },
-    { title: "司法解释", refs: interpRefs, icon: "释" },
-    { title: "参考案例", refs: caseRefs, icon: "案" },
+    { title: "法律依据", refs: lawRefs, icon: "§", color: "text-blue-600 dark:text-blue-400" },
+    { title: "司法解释", refs: interpRefs, icon: "释", color: "text-purple-600 dark:text-purple-400" },
+    { title: "参考案例", refs: caseRefs, icon: "案", color: "text-amber-600 dark:text-amber-400" },
   ].filter((s) => s.refs.length > 0);
+
+  if (sections.length === 0) return null;
 
   return (
     <div className="mt-3 space-y-3">
+      <div className="flex items-center gap-1.5">
+        <span className="text-[11px] font-medium text-muted-foreground">
+          引用依据
+        </span>
+        <span className="rounded-full bg-muted/50 px-1.5 py-0.5 text-[9px] text-muted-foreground">
+          {references.length}条
+        </span>
+      </div>
       {sections.map((section) => (
         <div key={section.title}>
           <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="flex size-4 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
+            <span className={cn("flex size-4 items-center justify-center rounded bg-primary/10 text-[10px] font-bold", section.color)}>
               {section.icon}
             </span>
             <span className="text-[11px] font-medium text-muted-foreground/80">
@@ -122,17 +194,20 @@ export function LegalAssistantMessageBubble({
               {irac ? <IracDisplay irac={irac} /> : null}
 
               {references && references.length > 0 ? (
-                <ReferencesByType references={references} />
+                <>
+                  <SearchProcessBadge references={references} />
+                  <ReferencesByType references={references} />
+                </>
               ) : null}
 
-              {showStreaming ? (
+              {showStreaming && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <span className="size-2 rounded-full bg-current animate-pulse" />
                   <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:150ms]" />
                   <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:300ms]" />
                   <span className="text-xs">正在生成回复...</span>
                 </div>
-              ) : null}
+              )}
 
               {!content && !showStreaming ? <p className="whitespace-pre-wrap">{content}</p> : null}
             </div>

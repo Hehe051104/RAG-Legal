@@ -546,71 +546,103 @@ async def chat_endpoint(req: ChatRequest):
                 return StreamingResponse(low_conf_sse(), media_type="text/event-stream")
             return low_conf_payload
 
-        # 5. 生成 + 审计合并为一次调用 (结构化 JSON 输出)
-        laws_context_parts = []
+        # 5. 构建结构化上下文 + IRAC生成
+        # 分离法律/解释和案例
+        law_parts = []
+        case_parts = []
         for i, d in enumerate(final_docs):
             meta = d['metadata']
             source = meta.get('source', '未知来源')
             article = meta.get('article_number', '')
             doc_type = meta.get('doc_type', 'law')
-            type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "指导案例"}.get(doc_type, "法律依据")
-            laws_context_parts.append(
-                f"【{i+1}】[{type_label}] 《{source}》{article}\n{d['content']}"
-            )
-        laws_context = "\n\n".join(laws_context_parts)
 
-        audit_prompt = f"""
-你是一名资深法律顾问兼审计员，采用IRAC法律分析方法。请基于【用户提问】和【法律依据】给出专业法律分析，并用严格 JSON 输出。
-输出必须是单行 JSON，不要包含代码块或额外文本。
+            if doc_type == 'case':
+                # 案例：展示结构化内容
+                case_number = meta.get('case_number', article)
+                court = meta.get('court', source)
+                date = meta.get('date', '')
+                case_parts.append(
+                    f"【{i+1}】[案例] {case_number} - {court} {date}\n{d['content']}"
+                )
+            else:
+                # 法律/解释
+                type_label = "法律条文" if doc_type == "law" else "司法解释"
+                law_parts.append(
+                    f"【{i+1}】[{type_label}] 《{source}》{article}\n{d['content']}"
+                )
 
-JSON 格式：
-{{"status":"success|need_clarify|reject_non_legal|rewrite","issue":"...","rule":"...","application":"...","conclusion":"...","reason":"..."}}
+        # 构建分组上下文
+        context_sections = []
+        if law_parts:
+            context_sections.append("## 法律依据（用于Rule部分）\n" + "\n\n".join(law_parts))
+        if case_parts:
+            context_sections.append("## 案例参考（用于Application部分）\n" + "\n\n".join(case_parts))
+        formatted_context = "\n\n".join(context_sections) if context_sections else "未检索到相关法律依据。"
+
+        # 获取历史对话
+        from RAG import _history_to_prompt_text
+        history_str = _history_to_prompt_text(req.history, max_messages=6)
+
+        # 构建统一IRAC prompt（无嵌套）
+        irac_prompt = f"""你是一名专业法律顾问。根据以下检索到的法律依据和案例，进行IRAC分析。
+
+{formatted_context}
+
+【用户问题】：{req.query}
+【对话历史】：{history_str}
+
+请用严格JSON格式输出，单行JSON，不要代码块：
+{{"status":"success|need_clarify|reject_non_legal","issue":"...","rule":"...","application":"...","conclusion":"..."}}
 
 规则：
-1. 若用户问题与法律无关 -> status=reject_non_legal，所有IRAC字段填空字符串。
-2. 若问题过于模糊且需要补充 -> status=need_clarify，issue/rule/application/conclusion填空，reason=澄清问题（<=300字）。
-3. 若需要纠正/重写以严格匹配法律依据 -> status=rewrite。
-4. 其他情况 -> status=success，完整填写所有IRAC字段。
+1. 若问题与法律无关 -> status=reject_non_legal，IRAC字段填空
+2. 若问题过于模糊 -> status=need_clarify，IRAC字段填空，conclusion=澄清问题
+3. 其他 -> status=success，完整填写
 
-【IRAC各字段要求】（每个字段使用Markdown格式）：
+【IRAC要求】：
 
-- issue: 明确指出用户问题中的核心法律争议点，1-2句话。
-- rule: 列出适用的法律条文、司法解释和案例。格式：
-  * 《法律名》第X条："..."
-  * 司法解释：...
-  * ⚠️ **案例参考**：引用【法律依据】中标记为[指导案例]的内容。说明案例的裁判要点与当前问题的关联性。如果检索结果中有案例，必须引用至少一个。
-- application: 将法律规则与用户的具体情况进行分析：
-  * 事实认定
-  * 法律适用分析（结合法条+案例裁判逻辑）
-  * 有利/不利因素分析
-  * ⚠️ **案例对比**：与检索到的类似案例进行对比，说明相似之处和不同之处
-- conclusion:
-  * 明确的法律意见
-  * 具体建议（结合案例中的裁判倾向）
-  * 风险提示
+issue（法律争点）：
+- 根据用户描述的事实，识别1-3个核心法律争点
+- 说明争点的法律性质（刑事/民事/行政）
 
-reason 用一句话说明判断依据。
+rule（法律规则）：
+- 引用【法律依据】中的具体条文，格式：《法律名》第X条："原文引用"
+- 引用司法解释：根据XX解释第X条："原文引用"
+- 说明规则的适用条件
 
-⚠️ *本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。*
+application（适用分析）：
+- 事实认定：从用户描述中提取关键事实
+- 规则适用：分析规则是否满足适用条件
+- 类案对比：引用【案例参考】中的裁判理由，说明法院如何认定类似事实
+- 有利/不利因素分析
 
-固定拒答话术："抱歉，我是一名法律助手，专注于法律咨询和依据查询。我无法为您提供烹饪、生活常识或其他非法律领域的建议。"
+conclusion（结论）：
+- 参考案例的裁判要旨，给出明确法律意见
+- 具体行动建议
+- 风险提示
+- 末尾加：⚠️ 本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。"""
 
-【用户提问】：{req.query}
-【法律依据】：{laws_context}
-"""
+        # 直接调用Ollama（不通过call_ollama_rag，避免prompt嵌套）
+        print(f" 正在生成IRAC分析...")
+        ollama_url = "http://localhost:11434/api/generate"
+        ollama_payload = {
+            "model": Config.RAG_MODEL,
+            "prompt": irac_prompt,
+            "stream": False,
+            "options": {"num_ctx": 4096, "temperature": 0.3}
+        }
 
-        raw_audit = await _call_maybe_async(
-            call_ollama_rag,
-            audit_prompt,
-            [],
-            req.history,
-            Config.RAG_MODEL,
-        )
-        raw_audit = (raw_audit or "").strip()
+        try:
+            ollama_resp = requests.post(ollama_url, json=ollama_payload)
+            raw_audit = ollama_resp.json().get("response", "").strip()
+        except Exception as e:
+            print(f"Ollama请求失败: {e}")
+            raw_audit = ""
+
         audit = _safe_parse_audit_result(raw_audit)
 
         if not audit:
-            print("⚠️ 审计 JSON 解析失败，启用降级策略")
+            print("⚠️ JSON解析失败，启用降级策略")
             if raw_audit:
                 audit = AuditResult(
                     status="success",
