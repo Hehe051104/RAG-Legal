@@ -97,17 +97,15 @@ def _history_to_prompt_text(history: List[Any], max_messages: int) -> str:
     )
 
 def rewrite_query(user_query, history, model_name):
-    “””分析用户意图，生成结构化搜索指令。
-
-    返回格式：
-    领域:刑事|【中华人民共和国刑法-第二百六十四条】|法律关键词:盗窃罪、数额较大、入户盗窃|案例关键词:盗窃、入户、量刑
-    “””
-    print(“\n正在分析用户意图并重写查询...”)
+    # 分析用户意图，生成结构化搜索指令。
+    # 返回格式：
+    # 领域:刑事|【中华人民共和国刑法-第二百六十四条】|法律关键词:盗窃罪、数额较大、入户盗窃|案例关键词:盗窃、入户、量刑
+    print("\n正在分析用户意图并重写查询...")
 
     history_str = _history_to_prompt_text(history, max_messages=8)
     available_laws_list, available_cases_list = get_available_laws()
 
-    prompt = f”””你是一个顶级的法律咨询意图解析器。请结合【对话历史】，将用户的【最新提问】改写为结构化搜索指令。
+    prompt = f"""你是一个顶级的法律咨询意图解析器。请结合【对话历史】，将用户的【最新提问】改写为结构化搜索指令。
 
 【输出格式（严格遵守）】
 领域:XXX|【法律名-第xxx条】|法律关键词:A、B、C|案例关键词:D、E、F
@@ -119,7 +117,7 @@ def rewrite_query(user_query, history, model_name):
 4. 案例关键词: 3-5个用于搜索类似案例的术语（案由、行为、争议焦点）
 
 【红线规则】
-1) 数字不可改写：用户说”第二条”就输出”第二条”，不可变成其他条号
+1) 数字不可改写：用户说"第二条"就输出"第二条"，不可变成其他条号
 2) 禁止过度联想：用户没说具体罪名，不要脑补
 3) 领域判断优先：先判断属于什么法律领域，再选法律
 
@@ -154,23 +152,23 @@ def rewrite_query(user_query, history, model_name):
 【最新提问】：
 {user_query}
 
-请直接输出结构化搜索指令：”””
+请直接输出结构化搜索指令："""
 
-    payload = {“model”: model_name, “prompt”: prompt, “stream”: False}
+    payload = {"model": model_name, "prompt": prompt, "stream": False}
     try:
-        response = requests.post(“http://localhost:11434/api/generate”, json=payload)
-        result = response.json().get(“response”, “”).strip()
+        response = requests.post("http://localhost:11434/api/generate", json=payload)
+        result = response.json().get("response", "").strip()
         if result:
-            print(f”改写结果: {result}”)
+            print(f"改写结果: {result}")
             return result
         return user_query
     except Exception as e:
-        print(f”大模型请求失败: {e}”)
+        print(f"大模型请求失败: {e}")
         return user_query
 
 
 def parse_rewrite_result(rewrite_text):
-    “””解析改写结果，提取领域、标签、关键词。
+    """解析改写结果，提取领域、标签、关键词。
 
     返回: {
         'domain': '刑事',
@@ -179,7 +177,7 @@ def parse_rewrite_result(rewrite_text):
         'case_keywords': '盗窃、入户、量刑',
         'raw': '原始文本'
     }
-    “””
+    """
     result = {
         'domain': '',
         'tags': [],
@@ -217,7 +215,7 @@ def parse_rewrite_result(rewrite_text):
     return result
 
 def call_ollama_rag(query_text, retrieved_docs,history,model_name):
-    context = “”
+    context = ""
     for i, item in enumerate(retrieved_docs):
         meta = item['metadata']
         content = item['content']
@@ -225,22 +223,22 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
         doc_type = meta.get('doc_type', 'law')
 
         # 标注文档类型
-        type_label = {“law”: “法律条文”, “interpretation”: “司法解释”, “case”: “案例”}.get(doc_type, “法律依据”)
+        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "法律依据")
 
         # 构建来源路径
-        if doc_type == “case”:
+        if doc_type == "case":
             case_number = meta.get('case_number', '')
             court = meta.get('court', '')
             date = meta.get('date', '')
-            path = f”{court} {case_number} {date}”.strip()
+            path = f"{court} {case_number} {date}".strip()
         else:
             path = source
 
-        context += f”【{i+1}】[{type_label}] {path}\n{content}\n\n”
+        context += f"【{i+1}】[{type_label}] {path}\n{content}\n\n"
 
-    # 保持原有”最近三轮上下文”的语义，按消息数约等于最近 6 条
+    # 保持原有"最近三轮上下文"的语义，按消息数约等于最近 6 条
     history_context = _history_to_prompt_text(history, max_messages=10)
-    prompt = f”””你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
+    prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
 
 【IRAC分析框架】：
 - Issue（法律争点）：识别用户问题中的核心法律争议点
@@ -284,10 +282,10 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 1. 如果用户在询问之前聊过的话题，请直接根据【对话历史】回答。
 2. 必须优先使用【法律依据】中的内容，不得编造法条。
 3. 如果法律依据不足，请如实告知并建议咨询专业律师。
-4. 引用法条时注明具体”条”和来源。
+4. 引用法条时注明具体"条"和来源。
 5. 参考案例时注明案号和法院。
 6. 保持专业、严谨的法律分析风格。
-“””
+"""
 
     # 调用 Ollama
     print(f" 正在链接本地 大语言模型: {model_name}")

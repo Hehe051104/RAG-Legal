@@ -2,8 +2,8 @@ import os
 import torch
 from pathlib import Path
 
-# 设置HuggingFace镜像
-os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+# 设置HuggingFace离线模式（避免SSL错误）
+os.environ["HF_HUB_OFFLINE"] = "1"
 
 # 项目根目录：src/ 的上一级
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

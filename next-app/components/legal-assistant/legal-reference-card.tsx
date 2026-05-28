@@ -109,7 +109,7 @@ export function LegalReferenceCard({ reference }: { reference: LegalReference })
 
           {pathStr && (
             <p className="mt-0.5 truncate text-[10px] text-muted-foreground/70">
-              {reference.source} > {pathStr}
+              {reference.source} &gt; {pathStr}
             </p>
           )}
 

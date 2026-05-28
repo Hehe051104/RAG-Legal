@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 import uvicorn
 import torch
+import requests
 
 # 导入咱们自己写的核心模块
 from config import Config
@@ -424,6 +425,41 @@ def _default_clarify_answer() -> str:
     return "您的问题描述较为模糊。为了准确匹配法律依据，请补充具体细节（如：纠纷起因、涉及的金额或具体的合同类型）。"
 
 
+def _build_fallback_answer(query: str, docs: list) -> str:
+    """当Ollama不可用时，用检索到的文档生成基本回答。"""
+    if not docs:
+        return f"关于您的问题「{query}」，未找到直接相关的法律依据。建议您提供更多细节或咨询专业律师。"
+
+    parts = [f"关于您的问题「{query}」，以下是我检索到的相关法律依据：\n"]
+    for i, doc in enumerate(docs[:3], 1):
+        meta = doc.get('metadata', {})
+        source = meta.get('source', '未知来源')
+        article = meta.get('article_number', '')
+        doc_type = meta.get('doc_type', 'law')
+        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "依据")
+        parts.append(f"**{i}. [{type_label}] 《{source}》{article}**\n{doc['content'][:200]}...\n")
+
+    parts.append("\n⚠️ 本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。")
+    return "\n".join(parts)
+
+
+def _build_fallback_rule(docs: list) -> str:
+    """当Ollama不可用时，用检索到的文档生成Rule部分。"""
+    if not docs:
+        return "暂无相关法律依据。"
+
+    rules = []
+    for doc in docs:
+        meta = doc.get('metadata', {})
+        source = meta.get('source', '未知来源')
+        article = meta.get('article_number', '')
+        doc_type = meta.get('doc_type', 'law')
+        if doc_type in ('law', 'interpretation'):
+            rules.append(f"《{source}》{article}：{doc['content'][:150]}...")
+
+    return "\n".join(rules) if rules else "暂无相关法律条文。"
+
+
 def _build_answer_from_irac(audit: AuditResult) -> str:
     """Combine IRAC sections into a single markdown answer."""
     return (
@@ -653,14 +689,15 @@ conclusion（结论）：
                     reason="fallback_raw_text",
                 )
             else:
-                fallback = _default_clarify_answer()
+                # Ollama失败时，用检索到的文档生成基本回答
+                fallback = _build_fallback_answer(req.query, final_docs)
                 audit = AuditResult(
-                    status="need_clarify",
-                    issue="",
-                    rule="",
-                    application="",
+                    status="success",
+                    issue=f"关于：{req.query}",
+                    rule=_build_fallback_rule(final_docs),
+                    application="由于模型暂时不可用，无法进行详细分析。",
                     conclusion=fallback,
-                    reason="fallback_empty",
+                    reason="ollama_fallback",
                 )
 
         # Build combined markdown answer from IRAC sections
@@ -699,8 +736,8 @@ conclusion（结论）：
             return {"answer": reject_answer, "references": [], "status": "reject_non_legal"}
 
         # 分支二：判定"需澄清" (引导提问)
-        # 逻辑：审计员判定需澄清 OR (模型在问问题 且 (用户问得太简单 或 匹配分数不高))
-        if audit.status == "need_clarify" or (model_is_asking and (query_is_vague or top_score < 0.5)):
+        # 逻辑：审计员判定需澄清 OR (模型在问问题 且 用户问得极简短 且 分数极低)
+        if audit.status == "need_clarify" or (model_is_asking and query_is_vague and top_score < 0.0):
             print(f"🔍 综合判定：满足澄清条件 (标签: {audit.status}, 提问极短: {query_is_vague}, 得分: {top_score:.2f})")
 
             clarify_answer = combined_answer if len(combined_answer) < 300 else _default_clarify_answer()
