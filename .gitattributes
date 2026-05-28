@@ -1,2 +1,0 @@
-data/all_records.json filter=lfs diff=lfs merge=lfs -text
-data/vector_store/embeddings.npy filter=lfs diff=lfs merge=lfs -text
