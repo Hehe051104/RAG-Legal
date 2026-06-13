@@ -29,3 +29,7 @@ next-app/.next/
 # Runtime files
 scrape_progress.json
 fetch_progress.json
+
+# 忽略数据文件夹中的特定文件
+data/vector_store/embeddings.npy
+data/all_records.json
