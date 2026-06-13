@@ -1,6 +1,5 @@
 import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
-import { resolve } from "node:path";
 
 const basePath = process.env.IS_DEMO === "1" ? "/demo" : "";
 
@@ -22,7 +21,6 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
-  cacheComponents: true,
   devIndicators: false,
   poweredByHeader: false,
   reactCompiler: true,
@@ -41,13 +39,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.public.blob.vercel-storage.com",
       },
+      {
+        protocol: "https",
+        hostname: "i.postimg.cc",
+      },
     ],
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],
-  },
-  turbopack: {
-    root: resolve(process.cwd(), ".."),
   },
 };
 

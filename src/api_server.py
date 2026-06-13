@@ -8,7 +8,7 @@ import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from jose import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
@@ -20,7 +20,7 @@ import requests
 from config import Config
 from search import run_search
 from rerank import rerank_context
-from RAG import rewrite_query, call_ollama_rag, call_ollama_rag_stream
+from RAG import rewrite_query, call_ollama_rag
 from database import init_db
 from routers.auth import (
     AuthError,
@@ -28,6 +28,7 @@ from routers.auth import (
     decode_access_token,
     router as auth_router,
 )
+from routers.multimodal import router as multimodal_router
 
 
 ONLINE_TTL_SECONDS = int(os.getenv("ONLINE_TTL_SECONDS", "75"))
@@ -101,6 +102,7 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
+app.include_router(multimodal_router)
 
 
 
@@ -463,10 +465,10 @@ def _build_fallback_rule(docs: list) -> str:
 def _build_answer_from_irac(audit: AuditResult) -> str:
     """Combine IRAC sections into a single markdown answer."""
     return (
-        f"## 一、法律争点（Issue）\n{audit.issue}\n\n"
-        f"## 二、法律规则（Rule）\n{audit.rule}\n\n"
-        f"## 三、适用分析（Application）\n{audit.application}\n\n"
-        f"## 四、结论（Conclusion）\n{audit.conclusion}"
+        f"## 一、法律争点\n{audit.issue}\n\n"
+        f"## 二、法律规则\n{audit.rule}\n\n"
+        f"## 三、适用分析\n{audit.application}\n\n"
+        f"## 四、结论\n{audit.conclusion}"
     )
 
 
@@ -488,7 +490,70 @@ async def chat_endpoint(req: ChatRequest):
         print(f"📥 [API接收请求] 用户提问: {req.query}")
         print(f"⚙️  [前端配置] top_n={req.top_n}, n_results={req.n_results}, 历史对话轮数={len(req.history)}")
 
-        # 1. 意图重写
+        # ==========================================
+        # 0. 非法律问题关键词匹配（匹配到则直接走普通对话，跳过搜索）
+        # ==========================================
+        _NON_LEGAL_PATTERNS = [
+            # 打招呼
+            "你好", "您好", "嗨", "哈喽", "hello", "hi", "hey", "早上好", "下午好", "晚上好",
+            "早安", "晚安", "在吗", "在不在", "你是谁", "你叫什么", "你是什么",
+            # 闲聊
+            "今天天气", "天气怎么样", "吃了吗", "吃饭了吗", "无聊", "开心", "难过",
+            "谢谢", "感谢", "辛苦了", "再见", "拜拜", "好的", "知道了", "明白",
+            # 技术/编程
+            "代码", "编程", "python", "java", "javascript", "bug", "程序", "算法",
+            "数据库", "服务器", "前端", "后端", "接口", "api", "html", "css",
+            # 数学/科学
+            "数学", "计算", "物理", "化学", "生物", "公式", "方程",
+            # 翻译/写作
+            "翻译", "写一篇", "帮我写", "作文", "论文", "总结一下",
+            # 娱乐
+            "电影", "音乐", "游戏", "小说", "电视剧", "综艺",
+            # 生活
+            "怎么做饭", "菜谱", "旅游", "减肥", "健身", "护肤",
+            # AI相关
+            "人工智能", "机器学习", "深度学习", "chatgpt", "大模型", "神经网络",
+            # 故意测试
+            "讲个笑话", "讲个故事", "猜谜语", "成语接龙",
+        ]
+
+        query_lower = req.query.strip().lower()
+        is_non_legal = any(pattern in query_lower for pattern in _NON_LEGAL_PATTERNS)
+
+        # 短问题（<=4个字）且不包含法律关键词 → 大概率是非法律问题
+        _LEGAL_KEYWORDS = [
+            "法", "罪", "刑", "诉", "判", "赔偿", "合同", "纠纷", "侵权", "离婚",
+            "遗产", "继承", "劳动", "工伤", "交通", "事故", "诈骗", "盗窃", "故意",
+            "违法", "合法", "权利", "义务", "律师", "法院", "公安", "仲裁",
+            "起诉", "上诉", "申诉", "执行", "查封", "拘留", "逮捕", "缓刑",
+            "杀人", "打人", "伤人", "抢劫", "贩毒", "贪污", "受贿",
+        ]
+        has_legal_keyword = any(kw in query_lower for kw in _LEGAL_KEYWORDS)
+
+        if is_non_legal and not has_legal_keyword:
+            print(f"🔀 匹配到非法律关键词，直接走普通对话")
+            recent_history = req.history[-2:] if len(req.history) > 2 else req.history
+            answer = await _call_maybe_async(
+                call_ollama_rag,
+                req.query,
+                [],
+                recent_history,
+                Config.RAG_MODEL,
+            )
+            payload = {"answer": answer, "references": [], "status": "success_chat"}
+            if req.stream:
+                def chat_sse():
+                    chunk_size = 4
+                    for i in range(0, len(answer), chunk_size):
+                        yield f"data: {json.dumps({'type': 'delta', 'content': answer[i:i+chunk_size]}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'type': 'done', 'content': '', 'references': [], 'status': 'success_chat'}, ensure_ascii=False)}\n\n"
+                    yield "[DONE]\n\n"
+                return StreamingResponse(chat_sse(), media_type="text/event-stream")
+            return payload
+
+        # ==========================================
+        # 1. 法律问题：意图重写 + 搜索 + IRAC
+        # ==========================================
         search_query = await _call_maybe_async(
             rewrite_query,
             req.query,
@@ -498,52 +563,7 @@ async def chat_endpoint(req: ChatRequest):
         if not search_query:
             search_query = req.query
 
-        # 非法律意图初步拦截
-        if "【非法律意图】" in search_query:
-            print("🚫 判定：非法律问题，直接拒答")
-            reject_payload = {
-                "answer": "抱歉，我仅提供法律咨询服务，无法回答与法律无关的内容。",
-                "references": [],
-                "status": "reject_non_legal"
-            }
-            if req.stream:
-                def reject_sse():
-                    yield f"data: {json.dumps({'type': 'delta', 'content': reject_payload['answer']}, ensure_ascii=False)}\n\n"
-                    yield f"data: {json.dumps({'type': 'done', 'references': [], 'status': 'reject_non_legal'}, ensure_ascii=False)}\n\n"
-                    yield "[DONE]\n\n"
-                return StreamingResponse(reject_sse(), media_type="text/event-stream")
-            return reject_payload
-
-        # 2. 意图预判 (继承你 main.py 里的逻辑)
-        skip_words = ["总结", "记忆", "之前", "聊了什么", "你是谁"]
-        should_skip_search = any(word in search_query for word in skip_words)
-
-        # 如果前端强制关掉了检索，或者触发了闲聊词
-        if not req.force_search or should_skip_search:
-            print("🔀 [流转] 判定为闲聊或前端关闭检索，直接进入大模型回复。")
-            answer = await _call_maybe_async(
-                call_ollama_rag,
-                req.query,
-                [],
-                req.history,
-                Config.RAG_MODEL,
-            )
-            chitchat_payload = {
-                "answer": answer,
-                "references": [],
-                "status": "success_no_search"
-            }
-            if req.stream:
-                def chitchat_sse():
-                    chunk_size = 4
-                    for i in range(0, len(answer), chunk_size):
-                        yield f"data: {json.dumps({'type': 'delta', 'content': answer[i:i+chunk_size]}, ensure_ascii=False)}\n\n"
-                    yield f"data: {json.dumps({'type': 'done', 'references': [], 'status': 'success_no_search'}, ensure_ascii=False)}\n\n"
-                    yield "[DONE]\n\n"
-                return StreamingResponse(chitchat_sse(), media_type="text/event-stream")
-            return chitchat_payload
-
-        # 3. 混合检索
+        # 2. 混合检索
         raw_docs = await _call_maybe_async(
             run_search,
             search_query,
@@ -555,7 +575,7 @@ async def chat_endpoint(req: ChatRequest):
 
         final_docs = []
         if raw_docs:
-            # 4. 动态重排 (传入前端指定的 top_n 和 threshold)
+            # 3. 动态重排
             final_docs = await _call_maybe_async(
                 rerank_context,
                 search_query,
@@ -566,23 +586,29 @@ async def chat_endpoint(req: ChatRequest):
                 req.threshold,
             )
 
-        # 无结果直接拒答
+        # 4. 搜索无结果 → 普通对话
         if not final_docs:
-            print("⚠️ 无匹配法条 → 低置信度拒答")
-            low_conf_payload = {
-                "answer": "❌ 未查询到相关法律依据，无法提供准确回答。请您描述更具体的法律问题。",
-                "references": [],
-                "status": "reject_low_confidence"
-            }
+            print("🔀 搜索无结果，切换为普通对话")
+            recent_history = req.history[-2:] if len(req.history) > 2 else req.history
+            answer = await _call_maybe_async(
+                call_ollama_rag,
+                req.query,
+                [],
+                recent_history,
+                Config.RAG_MODEL,
+            )
+            payload = {"answer": answer, "references": [], "status": "success_chat"}
             if req.stream:
-                def low_conf_sse():
-                    yield f"data: {json.dumps({'type': 'delta', 'content': low_conf_payload['answer']}, ensure_ascii=False)}\n\n"
-                    yield f"data: {json.dumps({'type': 'done', 'references': [], 'status': 'reject_low_confidence'}, ensure_ascii=False)}\n\n"
+                def chat_sse2():
+                    chunk_size = 4
+                    for i in range(0, len(answer), chunk_size):
+                        yield f"data: {json.dumps({'type': 'delta', 'content': answer[i:i+chunk_size]}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'type': 'done', 'content': '', 'references': [], 'status': 'success_chat'}, ensure_ascii=False)}\n\n"
                     yield "[DONE]\n\n"
-                return StreamingResponse(low_conf_sse(), media_type="text/event-stream")
-            return low_conf_payload
+                return StreamingResponse(chat_sse2(), media_type="text/event-stream")
+            return payload
 
-        # 5. 构建结构化上下文 + IRAC生成
+        # 5. 有搜索结果 → IRAC 法律分析
         # 分离法律/解释和案例
         law_parts = []
         case_parts = []
@@ -634,25 +660,26 @@ async def chat_endpoint(req: ChatRequest):
 1. 若问题与法律无关 -> status=reject_non_legal，IRAC字段填空
 2. 若问题过于模糊 -> status=need_clarify，IRAC字段填空，conclusion=澄清问题
 3. 其他 -> status=success，完整填写
+4. 所有字段内容必须使用中文，禁止出现英文单词或缩写
 
-【IRAC要求】：
+【分析要求】：
 
-issue（法律争点）：
-- 根据用户描述的事实，识别1-3个核心法律争点
-- 说明争点的法律性质（刑事/民事/行政）
+法律争点：
+- 根据用户描述的事实，识别1-3个核心法律争议点
+- 说明争议点的法律性质（刑事/民事/行政）
 
-rule（法律规则）：
-- 引用【法律依据】中的具体条文，格式：《法律名》第X条："原文引用"
+法律规则：
+- 引用【法律依据】中的具体条文，格式：《法律名》第X条规定："原文引用"
 - 引用司法解释：根据XX解释第X条："原文引用"
 - 说明规则的适用条件
 
-application（适用分析）：
+适用分析：
 - 事实认定：从用户描述中提取关键事实
 - 规则适用：分析规则是否满足适用条件
 - 类案对比：引用【案例参考】中的裁判理由，说明法院如何认定类似事实
 - 有利/不利因素分析
 
-conclusion（结论）：
+结论：
 - 参考案例的裁判要旨，给出明确法律意见
 - 具体行动建议
 - 风险提示
@@ -724,17 +751,6 @@ conclusion（结论）：
         top_score = final_docs[0].get("rerank_score", -999)
 
         # 分支一：判定"非法律" (拒答)
-        if audit.status == "reject_non_legal":
-            print("🚫 二次审计：判定为非法律话题，执行拒答")
-            reject_answer = "抱歉，我是一名法律助手，专注于法律咨询和依据查询。我无法为您提供烹饪、生活常识或其他非法律领域的建议。"
-            if req.stream:
-                def audit_reject_sse():
-                    yield f"data: {json.dumps({'type': 'delta', 'content': reject_answer}, ensure_ascii=False)}\n\n"
-                    yield f"data: {json.dumps({'type': 'done', 'references': [], 'status': 'reject_non_legal'}, ensure_ascii=False)}\n\n"
-                    yield "[DONE]\n\n"
-                return StreamingResponse(audit_reject_sse(), media_type="text/event-stream")
-            return {"answer": reject_answer, "references": [], "status": "reject_non_legal"}
-
         # 分支二：判定"需澄清" (引导提问)
         # 逻辑：审计员判定需澄清 OR (模型在问问题 且 用户问得极简短 且 分数极低)
         if audit.status == "need_clarify" or (model_is_asking and query_is_vague and top_score < 0.0):
@@ -861,4 +877,4 @@ if __name__ == "__main__":
     # 启动服务器，对外暴露 8000 端口
     print("🚀 法律智能体 API 服务已启动！")
     print("👉 请在浏览器中打开调试台: http://127.0.0.1:8000/docs")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("api_server:app", host="0.0.0.0", port=8000, reload=True)

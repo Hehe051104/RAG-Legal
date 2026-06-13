@@ -1,3 +1,4 @@
+# ！！！内部成员使用本地3000端口只要看1，2
 统一官网（main分支）：rag-legal-git-main-hehe051104s-projects.vercel.app
 
 .env文件需要解压下载好然后放进主目录下
@@ -13,15 +14,13 @@
 
 不用就关闭终端，让别人用
 
-
-
 # 法律助手项目说明
 
 相关数据库已建立完成，只需要进行环境配置并启动服务。
 
 ## 1. 环境准备
 
-先安装 Python 依赖：
+### 1.1 安装依赖
 
 ```bash
 pip install -r requirements.txt
@@ -57,9 +56,8 @@ ollama run Lusizo/qwen2.5-7b-instruct-1m
 ```bash
 需要node-js环境，请自己安装
 cd next-app
-npm install -g pnpm
-pnpm dev 代替 npm run dev
-cloudflare中用pnpm run build 代替 npm run build   pnpm中run可省略
+npm install -g pnpm（要装pnpm，指令不对让ai改）
+pnpm dev 
 ```
 
 启动后访问：http://localhost:3000

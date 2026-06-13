@@ -122,8 +122,6 @@ def parse_code_perfect(file_path, output_json):
     print(f"解析结束！共提取 {len(legal_records)} 条法律条文。")
     print(f"JSON已保存至：{os.path.abspath(output_json)}")
 
-# parse_code_perfect("法律原文/中华人民共和国刑法_20201226.docx", "code_json/criminal_law_452.json",'Criminal_law')
-
 # 处理司法解释的  相较于法律条文,只需要识别chapter和artical,正则表达式做了改变,其他一样
 def parse_interpretation_perfect(file_path, output_json):
     doc = docx.Document(file_path)

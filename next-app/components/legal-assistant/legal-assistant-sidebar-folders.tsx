@@ -83,10 +83,10 @@ export function LegalAssistantSidebarFolders({
                   </div>
                 </button>
 
-                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/folder:opacity-100">
+                <div className="flex items-center gap-1">
                   <Button
                     aria-label="重命名文件夹"
-                    className="size-7 rounded-md"
+                    className="size-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all duration-150"
                     onClick={() => onFolderEdit(folder.id)}
                     size="icon-sm"
                     type="button"
@@ -96,7 +96,7 @@ export function LegalAssistantSidebarFolders({
                   </Button>
                   <Button
                     aria-label="删除文件夹"
-                    className="size-7 rounded-md text-destructive hover:text-destructive"
+                    className="size-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-95 transition-all duration-150"
                     onClick={() => onFolderDelete(folder.id)}
                     size="icon-sm"
                     type="button"

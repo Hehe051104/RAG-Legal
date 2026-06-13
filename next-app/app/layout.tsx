@@ -8,8 +8,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Next.js Chatbot Template",
-  description: "Next.js chatbot template using the AI SDK.",
+  title: "法律顾问 - AI 智能助手",
+  description: "基于 IRAC 分析框架的 AI 法律咨询助手",
 };
 
 export const viewport = {
@@ -32,7 +32,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="light"
             disableTransitionOnChange
             enableSystem
           >

@@ -10,34 +10,19 @@ const IRAC_STAGES = [
   {
     key: "issue",
     title: "法律争点",
-    subtitle: "Issue",
     icon: "一",
-    color: "border-l-blue-500",
-    bg: "bg-blue-50/50 dark:bg-blue-950/20",
-    iconBg: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
-    headerBg: "hover:bg-blue-100/50 dark:hover:bg-blue-900/30",
     description: "核心法律争议点",
   },
   {
     key: "rule",
     title: "法律规则",
-    subtitle: "Rule",
     icon: "二",
-    color: "border-l-emerald-500",
-    bg: "bg-emerald-50/50 dark:bg-emerald-950/20",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
-    headerBg: "hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30",
     description: "适用的法律条文和司法解释",
   },
   {
     key: "application",
     title: "适用分析",
-    subtitle: "Application",
     icon: "三",
-    color: "border-l-amber-500",
-    bg: "bg-amber-50/50 dark:bg-amber-950/20",
-    iconBg: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
-    headerBg: "hover:bg-amber-100/50 dark:hover:bg-amber-900/30",
     description: "法律规则与事实的结合分析",
   },
   {
@@ -45,10 +30,6 @@ const IRAC_STAGES = [
     title: "结论",
     subtitle: "Conclusion",
     icon: "四",
-    color: "border-l-purple-500",
-    bg: "bg-purple-50/50 dark:bg-purple-950/20",
-    iconBg: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
-    headerBg: "hover:bg-purple-100/50 dark:hover:bg-purple-900/30",
     description: "法律意见和行动建议",
   },
 ] as const;
@@ -110,53 +91,36 @@ export function IracDisplay({ irac, className }: IracDisplayProps) {
         return (
           <div
             key={stage.key}
-            className={cn(
-              "rounded-lg border border-border/50 border-l-[3px] overflow-hidden transition-all",
-              stage.color,
-              stage.bg,
-            )}
+            className="rounded-lg border border-border/40 overflow-hidden transition-all bg-card/50"
           >
             <button
               onClick={() => toggleSection(stage.key)}
-              className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 transition-colors",
-                stage.headerBg,
-              )}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-muted/30"
             >
-              <span
-                className={cn(
-                  "flex size-5 items-center justify-center rounded text-[11px] font-bold shrink-0",
-                  stage.iconBg,
-                )}
-              >
+              <span className="flex size-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary shrink-0">
                 {stage.icon}
               </span>
               <div className="flex flex-col items-start flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[13px] font-semibold text-foreground/90">
-                    {stage.title}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/50">
-                    {stage.subtitle}
-                  </span>
-                </div>
+                <span className="text-[14px] font-semibold text-foreground">
+                  {stage.title}
+                </span>
                 {!isExpanded && (
-                  <span className="text-[10px] text-muted-foreground/50 truncate max-w-full">
+                  <span className="text-[11px] text-muted-foreground/50 truncate max-w-full">
                     {stage.description}
                   </span>
                 )}
               </div>
               {isExpanded ? (
-                <ChevronUpIcon className="size-3.5 text-muted-foreground/40 shrink-0" />
+                <ChevronUpIcon className="size-4 text-muted-foreground/40 shrink-0" />
               ) : (
-                <ChevronDownIcon className="size-3.5 text-muted-foreground/40 shrink-0" />
+                <ChevronDownIcon className="size-4 text-muted-foreground/40 shrink-0" />
               )}
             </button>
 
             {isExpanded && (
-              <div className="px-3 pb-3 pt-1">
-                <div className="text-[13px] leading-[1.7] text-foreground/85">
-                  <MessageResponse className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1 prose-li:my-0.5 dark:prose-invert">
+              <div className="px-3 pb-3 pt-1 border-t border-border/20">
+                <div className="text-[14px] leading-[1.8] text-foreground/85">
+                  <MessageResponse className="prose prose-sm max-w-none prose-p:my-2.5 prose-p:leading-[1.8] prose-p:text-[14px] prose-ul:my-1.5 prose-li:my-0.5 prose-li:leading-[1.65] prose-strong:font-semibold dark:prose-invert">
                     {content}
                   </MessageResponse>
                 </div>

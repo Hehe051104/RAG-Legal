@@ -23,10 +23,10 @@ export function LegalAssistantChatEmptyState() {
 
       <div className="mt-4 grid w-full max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { icon: "I", title: "争点识别", desc: "Issue · 识别核心法律争议", color: "text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400" },
-          { icon: "R", title: "法律规则", desc: "Rule · 引用法条和解释", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400" },
-          { icon: "A", title: "适用分析", desc: "Application · 类案对比分析", color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400" },
-          { icon: "C", title: "结论建议", desc: "Conclusion · 法律意见和风险", color: "text-purple-600 bg-purple-50 dark:bg-purple-950/30 dark:text-purple-400" },
+          { icon: "一", title: "争点识别", desc: "识别核心法律争议", color: "text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400" },
+          { icon: "二", title: "法律规则", desc: "引用法条和解释", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400" },
+          { icon: "三", title: "适用分析", desc: "类案对比分析", color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400" },
+          { icon: "四", title: "结论建议", desc: "法律意见和风险", color: "text-purple-600 bg-purple-50 dark:bg-purple-950/30 dark:text-purple-400" },
         ].map((item) => (
           <div key={item.icon} className="group flex flex-col items-center gap-1.5 rounded-lg border border-border/30 bg-card/30 px-3 py-3 transition-all hover:border-border/60 hover:bg-card/50 hover:shadow-sm">
             <span className={`flex size-7 items-center justify-center rounded-full text-[12px] font-bold transition-transform group-hover:scale-110 ${item.color}`}>

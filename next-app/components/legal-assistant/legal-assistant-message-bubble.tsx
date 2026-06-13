@@ -1,15 +1,45 @@
 "use client";
 
-import { CopyIcon, SearchIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
-import { useState } from "react";
+import { CopyIcon, SearchIcon, ChevronDownIcon, ChevronUpIcon, Volume2Icon, Loader2Icon } from "lucide-react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 import { MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { SparklesIcon } from "@/components/chat/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LegalReferenceCard } from "./legal-reference-card";
+import { synthesizeSpeech } from "./api";
 import type { IracSections, LegalReference } from "./api";
 import { IracDisplay } from "./legal-assistant-irac-display";
+import { useHome } from "./home-context";
+
+/**
+ * 将后端返回的文本转为标准 Markdown，确保正确分段。
+ */
+function normalizeMarkdown(text: string): string {
+  // 统一换行符
+  let t = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  // 在中文标点后加段落分隔（如果后面紧跟非换行字符）
+  t = t
+    .replace(/(。)(?=[^\n])/g, "$1\n\n")
+    .replace(/(！)(?=[^\n])/g, "$1\n\n")
+    .replace(/(？)(?=[^\n])/g, "$1\n\n")
+    .replace(/(：)(?=[^\n])/g, "$1\n\n");
+
+  // 在 ## 标题前加换行（不管前面有没有 \n）
+  t = t.replace(/([^\n])(##\s)/g, "$1\n\n$2");
+
+  // 在 "一、" "二、" 等中文数字标题前加换行
+  t = t.replace(/([^\n])([一二三四五六七八九十]+、)/g, "$1\n\n$2");
+
+  // 清理多余空行
+  t = t.replace(/\n{3,}/g, "\n\n");
+
+  return t.trim();
+}
 
 function formatTimestamp(iso: string) {
   const date = new Date(iso);
@@ -149,6 +179,24 @@ export function LegalAssistantMessageBubble({
   const isUser = role === "user";
   const timestamp = formatTimestamp(createdAt);
   const showStreaming = !isUser && !content && status === "streaming";
+  const { authToken } = useHome();
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const handlePlayAudio = useCallback(async () => {
+    if (isSpeaking || !content) return;
+    setIsSpeaking(true);
+    try {
+      const result = await synthesizeSpeech(content.slice(0, 2000), authToken);
+      // TODO: 当后端返回真实音频 URL 后，用 Audio API 播放
+      // const audio = new Audio(result.audio_url);
+      // await audio.play();
+      toast.success(`语音合成成功（${result.text_length} 字）`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "语音合成失败");
+    } finally {
+      setIsSpeaking(false);
+    }
+  }, [content, authToken, isSpeaking]);
 
   return (
     <div className="group/message w-full">
@@ -162,32 +210,51 @@ export function LegalAssistantMessageBubble({
         ) : null}
 
         <div className={cn("relative min-w-0", isUser ? "max-w-[min(80%,56ch)]" : "flex-1")}>
-          <div className="absolute -top-1 right-0 opacity-0 transition-opacity group-hover/message:opacity-100">
+          <div className="absolute -top-1.5 right-0 flex items-center gap-1 opacity-0 transition-opacity duration-150 group-hover/message:opacity-100">
+            {!isUser && content && (
+              <Button
+                aria-label="语音播报"
+                className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
+                disabled={isSpeaking}
+                onClick={() => void handlePlayAudio()}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                {isSpeaking ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <Volume2Icon className="size-4" />
+                )}
+              </Button>
+            )}
             <Button
               aria-label="复制消息"
-              className="size-7 rounded-md text-muted-foreground hover:text-foreground"
+              className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
               onClick={() => {
                 if (typeof navigator !== "undefined" && navigator.clipboard) {
                   void navigator.clipboard.writeText(content);
+                  toast.success("已复制到剪贴板");
                 }
               }}
               size="icon-sm"
               type="button"
               variant="ghost"
             >
-              <CopyIcon className="size-3.5" />
+              <CopyIcon className="size-4" />
             </Button>
           </div>
 
           {isUser ? (
-            <div className="w-fit overflow-hidden break-words rounded-2xl rounded-br-lg border border-border/30 bg-gradient-to-br from-secondary to-muted px-3.5 py-2 shadow-[var(--shadow-card)]">
-              <p className="whitespace-pre-wrap text-[13px] leading-[1.65]">{content}</p>
+            <div className="w-fit overflow-hidden break-words rounded-2xl rounded-br-lg border border-border/30 bg-gradient-to-br from-secondary to-muted px-4 py-2.5 shadow-[var(--shadow-card)]">
+              <p className="whitespace-pre-wrap text-[14px] leading-[1.65]">{content}</p>
             </div>
           ) : (
-            <div className={cn("text-[13px] leading-[1.65]", isError ? "text-destructive" : "text-foreground")}>
-              {content ? (
-                <MessageResponse className="prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-pre:my-2 dark:prose-invert">
-                  {content}
+            <div className={cn("text-[14px] leading-[1.75]", isError ? "text-destructive" : "text-foreground")}>
+              {/* 有 irac 结构化数据时，只显示 IracDisplay，不重复显示 content */}
+              {content && !irac ? (
+                <MessageResponse className="prose prose-sm max-w-none prose-p:my-2.5 prose-p:leading-[1.8] prose-p:text-[14px] prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-li:leading-[1.65] prose-pre:my-2 prose-headings:mb-2 prose-headings:mt-5 prose-headings:font-semibold prose-strong:font-semibold prose-hr:my-4 dark:prose-invert">
+                  {normalizeMarkdown(content)}
                 </MessageResponse>
               ) : null}
 
@@ -201,11 +268,10 @@ export function LegalAssistantMessageBubble({
               ) : null}
 
               {showStreaming && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="size-2 rounded-full bg-current animate-pulse" />
-                  <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:150ms]" />
-                  <span className="size-2 rounded-full bg-current animate-pulse [animation-delay:300ms]" />
-                  <span className="text-xs">正在生成回复...</span>
+                <div className="flex items-center gap-2">
+                  <Shimmer className="text-sm" duration={2.5}>
+                    正在分析法律问题...
+                  </Shimmer>
                 </div>
               )}
 

@@ -128,7 +128,7 @@ export function LegalAssistantSidebarContent({
         <div className="space-y-4 px-2 py-3">
           <div className="space-y-3 rounded-lg border border-sidebar-border/60 bg-sidebar-accent/15 p-2">
             <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/60">
-              Folders
+              文件夹
             </div>
             <LegalAssistantSidebarFolders
               groupedFolders={filteredGroupedFolders}
@@ -144,7 +144,7 @@ export function LegalAssistantSidebarContent({
 
           <div className="space-y-3 rounded-lg border border-sidebar-border/60 bg-sidebar-accent/15 p-2">
             <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/60">
-              Conversations
+              会话列表
             </div>
             <LegalAssistantSidebarUngrouped
               conversations={filteredUngroupedConversations}
@@ -177,10 +177,10 @@ export function LegalAssistantSidebarContent({
   return (
     <aside
       className={cn(
-        "hidden min-h-0 flex-col bg-sidebar transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex",
+        "hidden shrink-0 min-h-0 flex-col bg-sidebar md:flex",
         isSideBarOpen
-          ? "w-[340px] border-r border-sidebar-border/70"
-          : "w-0 overflow-hidden border-r-0",
+          ? "w-[340px] min-w-[340px] border-r border-sidebar-border/70"
+          : "w-0 min-w-0 overflow-hidden border-r-0",
       )}
     >
       {sidebarBody}

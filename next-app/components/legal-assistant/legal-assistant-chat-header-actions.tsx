@@ -3,6 +3,7 @@
 import { InfoIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +17,7 @@ import { QuickSettings } from "./quick-settings";
 export function LegalAssistantChatHeaderActions() {
   return (
     <div className="absolute right-2 top-1 hidden h-10 items-center gap-1 md:flex">
+      <ThemeToggle />
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

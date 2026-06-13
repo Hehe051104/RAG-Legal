@@ -151,15 +151,6 @@ def _current_timestamp() -> float:
     return time.time()
 
 
-def _build_reset_code_record(code: str) -> dict[str, Any]:
-    now = _current_timestamp()
-    return {
-        "code_digest": _hash_reset_code(code),
-        "created_at": now,
-        "expires_at": now + RESET_CODE_EXPIRE_SECONDS,
-    }
-
-
 def _build_code_record(code: str, expire_seconds: int) -> dict[str, Any]:
     now = _current_timestamp()
     return {

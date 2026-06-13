@@ -1,6 +1,5 @@
 import requests
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -167,53 +166,6 @@ def rewrite_query(user_query, history, model_name):
         return user_query
 
 
-def parse_rewrite_result(rewrite_text):
-    """解析改写结果，提取领域、标签、关键词。
-
-    返回: {
-        'domain': '刑事',
-        'tags': ['【中华人民共和国刑法-第二百六十四条】'],
-        'law_keywords': '盗窃罪、数额较大、入户盗窃',
-        'case_keywords': '盗窃、入户、量刑',
-        'raw': '原始文本'
-    }
-    """
-    result = {
-        'domain': '',
-        'tags': [],
-        'law_keywords': '',
-        'case_keywords': '',
-        'raw': rewrite_text
-    }
-
-    if not rewrite_text:
-        return result
-
-    # 提取领域
-    domain_match = re.search(r'领域[:：]\s*(刑事|民事|行政|劳动|知识产权|商事|国家赔偿)', rewrite_text)
-    if domain_match:
-        result['domain'] = domain_match.group(1)
-
-    # 提取标签
-    result['tags'] = re.findall(r'【([^】]+)】', rewrite_text)
-
-    # 提取法律关键词
-    law_kw_match = re.search(r'法律关键词[:：]\s*(.+?)(?:\|案例关键词|$)', rewrite_text)
-    if law_kw_match:
-        result['law_keywords'] = law_kw_match.group(1).strip()
-
-    # 提取案例关键词
-    case_kw_match = re.search(r'案例关键词[:：]\s*(.+?)$', rewrite_text)
-    if case_kw_match:
-        result['case_keywords'] = case_kw_match.group(1).strip()
-
-    # 如果没有结构化格式，回退：整个文本作为关键词
-    if not result['domain'] and not result['tags']:
-        result['law_keywords'] = rewrite_text
-        result['case_keywords'] = rewrite_text
-
-    return result
-
 def call_ollama_rag(query_text, retrieved_docs,history,model_name):
     context = ""
     for i, item in enumerate(retrieved_docs):
@@ -238,7 +190,12 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 
     # 保持原有"最近三轮上下文"的语义，按消息数约等于最近 6 条
     history_context = _history_to_prompt_text(history, max_messages=10)
-    prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
+
+    # 根据是否有法律依据，选择不同的提示词
+    has_context = bool(context.strip())
+
+    if has_context:
+        prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
 
 【IRAC分析框架】：
 - Issue（法律争点）：识别用户问题中的核心法律争议点
@@ -278,13 +235,20 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 - 具体建议
 - 风险提示
 
-【注意事项】：
-1. 如果用户在询问之前聊过的话题，请直接根据【对话历史】回答。
-2. 必须优先使用【法律依据】中的内容，不得编造法条。
-3. 如果法律依据不足，请如实告知并建议咨询专业律师。
-4. 引用法条时注明具体"条"和来源。
-5. 参考案例时注明案号和法院。
-6. 保持专业、严谨的法律分析风格。
+⚠️ 本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。
+
+【格式要求】：
+- 每个IRAC部分之间用空行分隔
+- 每个要点单独成行
+- 引用法条时单独成段
+- 确保排版清晰易读
+"""
+    else:
+        prompt = f"""你是一个友好、专业的AI助手。
+
+【当前用户问题】：{query_text}
+
+请直接、自然地回答上面的问题。用中文回答，适当分段。
 """
 
     # 调用 Ollama

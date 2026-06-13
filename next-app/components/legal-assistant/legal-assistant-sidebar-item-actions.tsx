@@ -17,7 +17,7 @@ export function LegalAssistantSidebarItemActions({
 }: LegalAssistantSidebarItemActionsProps) {
   return (
     <div
-      className="ml-2 flex items-center gap-1 opacity-100 md:w-11 md:opacity-0 md:group-hover:opacity-100"
+      className="ml-auto flex shrink-0 items-center gap-1"
       onClick={(event) => {
         event.stopPropagation();
       }}
@@ -27,7 +27,7 @@ export function LegalAssistantSidebarItemActions({
     >
       <Button
         aria-label="重命名对话"
-        className="size-7 rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground"
+        className="size-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all duration-150"
         onClick={() => onRename(conversationId)}
         size="icon-sm"
         type="button"
@@ -38,7 +38,7 @@ export function LegalAssistantSidebarItemActions({
 
       <Button
         aria-label="删除对话"
-        className="size-7 rounded-md text-sidebar-foreground/50 hover:bg-destructive/10 hover:text-destructive"
+        className="size-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-95 transition-all duration-150"
         onClick={() => onDelete(conversationId)}
         size="icon-sm"
         type="button"

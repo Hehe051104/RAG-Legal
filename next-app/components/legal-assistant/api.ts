@@ -228,17 +228,24 @@ function appendStreamPayload(
 
   try {
     const parsed = JSON.parse(trimmed) as unknown;
+
+    // 跳过 done 消息，不将其作为文本内容
+    if (isRecord(parsed) && parsed.type === "done") {
+      return { text: "", references: extractReferencesFromPayload(parsed), irac: extractIracFromPayload(parsed) };
+    }
+
     const result = parseJsonContent(parsed, onDelta);
     if (result.text || result.references.length > 0 || result.irac) {
       return result;
     }
+
+    // JSON 解析成功但无内容，跳过（不作为文本显示）
+    return { text: "", references: [] };
   } catch {
+    // 非 JSON 文本，作为普通内容显示
     onDelta(trimmed);
     return { text: trimmed, references: [] };
   }
-
-  onDelta(trimmed);
-  return { text: trimmed, references: [] };
 }
 
 function extractReferencesFromPayload(json: unknown): LegalReference[] {
@@ -438,4 +445,96 @@ export function buildAssistantFetchInit(options: {
     credentials: "include",
     body: JSON.stringify(options.body),
   };
+}
+
+// ==========================================
+// 多模态接口
+// ==========================================
+
+export type UploadResult = {
+  url: string;
+  filename: string;
+  size: number;
+  content_type: string;
+};
+
+export type TranscriptionResult = {
+  text: string;
+  duration_seconds: number;
+  language: string;
+};
+
+export type SynthesizeResult = {
+  audio_url: string;
+  text_length: number;
+  format: string;
+};
+
+export async function uploadFile(
+  file: File,
+  token: string,
+): Promise<UploadResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(getApiUrl("/api/upload"), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const msg = await fetchAssistantErrorMessage(response);
+    throw new Error(msg);
+  }
+
+  const json = (await response.json()) as { status: string; data: UploadResult };
+  return json.data;
+}
+
+export async function transcribeAudio(
+  audioBlob: Blob,
+  token: string,
+): Promise<TranscriptionResult> {
+  const formData = new FormData();
+  formData.append("audio", audioBlob, "recording.webm");
+
+  const response = await fetch(getApiUrl("/api/speech/transcriptions"), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const msg = await fetchAssistantErrorMessage(response);
+    throw new Error(msg);
+  }
+
+  const json = (await response.json()) as { status: string; data: TranscriptionResult };
+  return json.data;
+}
+
+export async function synthesizeSpeech(
+  text: string,
+  token: string,
+): Promise<SynthesizeResult> {
+  const response = await fetch(getApiUrl("/api/speech/synthesize"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+    body: JSON.stringify({ text }),
+  });
+
+  if (!response.ok) {
+    const msg = await fetchAssistantErrorMessage(response);
+    throw new Error(msg);
+  }
+
+  const json = (await response.json()) as { status: string; data: SynthesizeResult };
+  return json.data;
 }

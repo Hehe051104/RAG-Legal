@@ -9,7 +9,7 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.35, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        What can I help with?
+        有什么法律问题需要帮助？
       </motion.div>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
@@ -17,7 +17,7 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.5, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        Ask a question, write code, or explore ideas.
+        咨询法律问题、了解法规条文、分析案例
       </motion.div>
     </div>
   );

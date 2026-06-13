@@ -701,10 +701,12 @@ export function HomeProvider({
           });
         }
       } catch (error) {
-        const message =
-          error instanceof Error
+        const isNetworkError = error instanceof TypeError && error.message.includes("fetch");
+        const message = isNetworkError
+          ? "无法连接到后端服务，请确认后端已启动（python src/api_server.py）"
+          : error instanceof Error
             ? error.message
-              : "请求后端失败，请检查接口地址和登录状态。";
+            : "请求后端失败，请检查接口地址和登录状态。";
 
         dispatch({
           type: "FINALIZE_MESSAGE",

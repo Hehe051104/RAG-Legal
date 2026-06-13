@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 
 import type { LegalAssistantMessage } from "./api";
 
@@ -53,22 +54,11 @@ export function LegalAssistantMainPane({
   setConversationDraft,
   setFolderDraft,
 }: LegalAssistantMainPaneProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const messagesStartRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    const panel = messagesEndRef.current;
-    if (!panel) {
-      return;
-    }
-
-    panel.scrollIntoView({ behavior: "smooth", block: "end" });
-  };
+  const { containerRef, endRef, isAtBottom, scrollToBottom } = useScrollToBottom();
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isSending]);
+    scrollToBottom("instant");
+  }, [messages, isSending, scrollToBottom]);
 
   return (
     <div className="relative flex min-w-0 flex-1 flex-col bg-sidebar">
@@ -84,10 +74,12 @@ export function LegalAssistantMainPane({
         <LegalAssistantChatFeed
           isSending={isSending}
           messages={messages}
-          messagesStartRef={messagesStartRef}
-          messagesEndRef={messagesEndRef}
-          scrollContainerRef={scrollContainerRef}
+          messagesStartRef={undefined}
+          messagesEndRef={endRef}
+          scrollContainerRef={containerRef}
           onQuickPrompt={onQuickPrompt}
+          isAtBottom={isAtBottom}
+          scrollToBottom={scrollToBottom}
         />
 
         <div className="sticky bottom-0 z-10 mx-auto flex w-full max-w-4xl gap-2 bg-background px-2 pb-3 pt-2 md:px-4 md:pb-4">

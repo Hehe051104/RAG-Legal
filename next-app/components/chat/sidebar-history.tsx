@@ -345,7 +345,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
               <div className="animate-spin">
                 <LoaderIcon />
               </div>
-              <div className="text-[11px]">Loading...</div>
+              <div className="text-[11px]">加载中...</div>
             </div>
           )}
         </SidebarGroupContent>

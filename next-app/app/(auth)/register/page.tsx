@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { toast } from "@/components/chat/toast";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { AnimatedCharacters } from "@/components/ui/animated-characters";
 import {
   AlertDialog,
@@ -240,7 +241,10 @@ export default function Page() {
         <div className="absolute bottom-1/4 left-1/4 size-96 bg-gray-300/20 dark:bg-gray-200/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="flex items-center justify-center p-8 bg-background">
+      <div className="relative flex items-center justify-center p-8 bg-background">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <div className="w-full max-w-[420px]">
           <div className="lg:hidden flex items-center justify-center gap-2 text-lg font-semibold mb-12">
             <Image
@@ -286,7 +290,7 @@ export default function Page() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="请输入邮箱地址"
                 autoComplete="off"
                 required
                 value={email}

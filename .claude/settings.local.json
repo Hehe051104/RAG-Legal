@@ -36,7 +36,30 @@
       "Bash(HF_ENDPOINT=https://hf-mirror.com D:/anaconda/envs/drl/python.exe scripts/build_vector_store.py)",
       "Bash(HF_ENDPOINT=https://hf-mirror.com D:/anaconda/envs/drl/python.exe -c ' *)",
       "Bash(nvidia-smi)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(cd *)",
+      "Bash(ls lib/ai/tools/)",
+      "Bash(ls artifacts/code/server.ts artifacts/sheet/server.ts artifacts/text/server.ts)",
+      "Bash(rmdir lib/ai/tools)",
+      "Bash(rmdir lib/artifacts)",
+      "Bash(pnpm build *)",
+      "Bash(npm --version)",
+      "Read(//c/Users/26704/AppData/Roaming/npm/**)",
+      "Read(//c/Users/26704/AppData/Local/pnpm/**)",
+      "Bash(where pnpm *)",
+      "Bash(npx pnpm *)",
+      "Bash(grep -rn \"//.*TODO\\\\|//.*FIXME\\\\|//.*HACK\\\\|//.*XXX\\\\|//.*DEPRECATED\" app/ components/ hooks/ lib/ artifacts/ --include='*.ts' --include='*.tsx')",
+      "Bash(grep -rn \"^\\\\s*//.*import\\\\|^\\\\s*//.*const\\\\|^\\\\s*//.*function\\\\|^\\\\s*//.*return\\\\|^\\\\s*//.*export\" app/ components/ hooks/ lib/ artifacts/ --include='*.ts' --include='*.tsx')",
+      "Bash(grep -rn \"^\\\\s*//\" app/ components/ hooks/ lib/ artifacts/ --include='*.ts' --include='*.tsx')",
+      "Bash(grep -iE \"^\\\\S+:\\\\d+:\\\\s*//\\\\s*\\(import |const |let |var |function |return |export |if |for |while |switch \\)\")",
+      "Bash(grep -B1 \"^\\\\s*}$\\\\|^\\\\s*//\\\\s*$\")",
+      "Bash(tasklist)",
+      "Bash(netstat -ano)",
+      "Bash(npx biome *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(awk '{print $2}')",
+      "Bash(awk '{print $5}')",
+      "Bash(taskkill //PID 105552 //F)"
     ]
   }
 }

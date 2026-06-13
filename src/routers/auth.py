@@ -327,10 +327,6 @@ ERROR_RESPONSES = {
 }
 
 
-def success(data: dict[str, Any], msg: str) -> APIResponse:
-    return APIResponse(status="success", data=data, msg=msg)
-
-
 def get_user_role(user: User) -> str:
     role = getattr(user, "role", None)
     return role if isinstance(role, str) and role else "user"

@@ -37,7 +37,7 @@ Chinese legal RAG chatbot with IRAC analysis framework. Users ask legal question
 │   ├── legal_vector_db/    # ChromaDB database
 │   └── registry.json
 ├── next-app/               # Next.js frontend
-├── run_server.py           # Server entry point
+├── src/                    # Core business code (api_server.py 为入口)
 ├── requirements.txt
 ├── CLAUDE.md
 └── .env / .env.example
@@ -49,7 +49,7 @@ Chinese legal RAG chatbot with IRAC analysis framework. Users ask legal question
 ```bash
 pip install -r requirements.txt
 ollama run Lusizo/qwen2.5-7b-instruct-1m   # start local LLM
-python run_server.py                         # FastAPI on port 8000
+python src/api_server.py                    # FastAPI on port 8000
 ```
 
 **Frontend (Next.js):**

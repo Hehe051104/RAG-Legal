@@ -330,7 +330,7 @@ export default function ForgotPasswordPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="请输入邮箱地址"
                   autoComplete="email"
                   disabled={step === "reset" || isSendingCode}
                   value={email}

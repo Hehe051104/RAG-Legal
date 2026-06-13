@@ -11,7 +11,7 @@ export function LegalAssistantChatSendingIndicator() {
         </div>
       </div>
 
-      <div className="flex h-[calc(13px*1.65)] items-center text-[13px] leading-[1.65]">
+      <div className="flex h-[calc(14px*1.65)] items-center text-[14px] leading-[1.65]">
         <span className="text-muted-foreground">助手正在思考...</span>
       </div>
     </div>
