@@ -29,6 +29,7 @@ from routers.auth import (
     router as auth_router,
 )
 from routers.multimodal import router as multimodal_router
+from fastapi.staticfiles import StaticFiles
 
 
 ONLINE_TTL_SECONDS = int(os.getenv("ONLINE_TTL_SECONDS", "75"))
@@ -100,6 +101,9 @@ app = FastAPI(
         {"url": "http://127.0.0.1:8000", "description": "本地开发环境"}
     ]
 )
+UPLOAD_ROOT = os.getenv("UPLOAD_ROOT", "uploads")
+os.makedirs(UPLOAD_ROOT, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_ROOT), name="uploads")
 
 app.include_router(auth_router)
 app.include_router(multimodal_router)
