@@ -452,11 +452,19 @@ export function buildAssistantFetchInit(options: {
 // ==========================================
 
 export type UploadResult = {
+  file_id?: string;
   url: string;
   filename: string;
+  stored_name?: string;
   size: number;
   content_type: string;
+  kind?: "image" | "document";
+  text?: string;
+  text_preview?: string;
+  text_length?: number;
+  can_analyze?: boolean;
 };
+
 
 export type TranscriptionResult = {
   text: string;
@@ -472,14 +480,20 @@ export type SynthesizeResult = {
 
 export async function uploadFile(
   file: File,
-  token: string,
+  token?: string,
 ): Promise<UploadResult> {
   const formData = new FormData();
   formData.append("file", file);
 
+  const headers: HeadersInit = {};
+
+  if (token?.trim()) {
+    headers.Authorization = `Bearer ${token.trim()}`;
+  }
+
   const response = await fetch(getApiUrl("/api/upload"), {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
     credentials: "include",
     body: formData,
   });
@@ -489,9 +503,15 @@ export async function uploadFile(
     throw new Error(msg);
   }
 
-  const json = (await response.json()) as { status: string; data: UploadResult };
+  const json = (await response.json()) as { status: string; data: UploadResult; msg?: string };
+
+  if (json.status !== "success") {
+    throw new Error(json.msg || "文件上传失败");
+  }
+
   return json.data;
 }
+
 
 export async function transcribeAudio(
   audioBlob: Blob,

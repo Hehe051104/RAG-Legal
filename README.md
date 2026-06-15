@@ -212,4 +212,18 @@ Invoke-RestMethod -Method Post -Uri "$base/api/auth/reset-password" -ContentType
 $verifyBody = @{ token = $token } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri "$base/api/auth/token/verify" -ContentType "application/json" -Body $verifyBody
 ```
+## 图片 OCR 识别
+
+如需使用图片上传后自动识别文字功能：
+
+1. 安装 Tesseract-OCR：
+   - 下载：https://github.com/UB-Mannheim/tesseract/releases
+   - 默认安装路径`C:\Program Files\Tesseract-OCR`
+
+2. 中文语言包，手动下载：
+   - https://github.com/tesseract-ocr/tessdata/raw/main/chi_sim.traineddata
+   - 放入 Tesseract-OCR 的 `tessdata` 文件夹
+
+3. 安装 Python 依赖：
+   pip install pytesseract
 
