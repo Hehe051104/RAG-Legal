@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
+from config import DOC_TYPE_LABELS
+
 # 项目根目录
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = PROJECT_ROOT / "data" / "registry.json"
@@ -166,36 +168,36 @@ def rewrite_query(user_query, history, model_name):
         return user_query
 
 
-def call_ollama_rag(query_text, retrieved_docs,history,model_name):
+def _build_rag_context(retrieved_docs):
+    """将检索文档格式化为 LLM prompt 上下文。"""
     context = ""
     for i, item in enumerate(retrieved_docs):
         meta = item['metadata']
         content = item['content']
         source = meta.get('source', '未知来源')
         doc_type = meta.get('doc_type', 'law')
+        type_label = DOC_TYPE_LABELS.get(doc_type, "法律依据")
 
-        # 标注文档类型
-        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "法律依据")
-
-        # 构建来源路径
         if doc_type == "case":
-            case_number = meta.get('case_number', '')
-            court = meta.get('court', '')
-            date = meta.get('date', '')
-            path = f"{court} {case_number} {date}".strip()
+            path = f"{meta.get('court', '')} {meta.get('case_number', '')} {meta.get('date', '')}".strip()
         else:
             path = source
 
         context += f"【{i+1}】[{type_label}] {path}\n{content}\n\n"
+    return context
 
-    # 保持原有"最近三轮上下文"的语义，按消息数约等于最近 6 条
-    history_context = _history_to_prompt_text(history, max_messages=10)
 
-    # 根据是否有法律依据，选择不同的提示词
-    has_context = bool(context.strip())
+def _build_rag_prompt(query_text, context, history_context):
+    """根据是否有检索上下文，构建 RAG prompt。"""
+    if not context.strip():
+        return f"""你是一个友好、专业的AI助手。
 
-    if has_context:
-        prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
+【当前用户问题】：{query_text}
+
+请直接、自然地回答上面的问题。用中文回答，适当分段。
+"""
+
+    return f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
 
 【IRAC分析框架】：
 - Issue（法律争点）：识别用户问题中的核心法律争议点
@@ -237,103 +239,6 @@ def call_ollama_rag(query_text, retrieved_docs,history,model_name):
 
 ⚠️ 本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。
 
-【格式要求】：
-- 每个IRAC部分之间用空行分隔
-- 每个要点单独成行
-- 引用法条时单独成段
-- 确保排版清晰易读
-"""
-    else:
-        prompt = f"""你是一个友好、专业的AI助手。
-
-【当前用户问题】：{query_text}
-
-请直接、自然地回答上面的问题。用中文回答，适当分段。
-"""
-
-    # 调用 Ollama
-    print(f" 正在链接本地 大语言模型: {model_name}")
-    url = "http://localhost:11434/api/generate"
-    payload = {
-        "model": model_name,
-        "prompt": prompt,
-        "stream": False,
-        "options": {
-            "num_ctx": 4096,  # kv限制，防止 1M 模型吞掉所有显存
-            "temperature": 0.3 # 法律咨询建议设低一点，更严谨
-        }
-    }
-
-    try:
-        response = requests.post(url, json=payload)
-        return response.json().get("response", "模型响应出错")
-    except Exception as e:
-        return f"连接 Ollama 失败: {str(e)}"
-
-def call_ollama_rag_stream(query_text, retrieved_docs, history, model_name):
-    """流式版本的 RAG 生成函数，逐 token yield 返回。"""
-    context = ""
-    for i, item in enumerate(retrieved_docs):
-        meta = item['metadata']
-        content = item['content']
-        source = meta.get('source', '未知来源')
-        doc_type = meta.get('doc_type', 'law')
-
-        # 标注文档类型
-        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "法律依据")
-
-        # 构建来源路径
-        if doc_type == "case":
-            case_number = meta.get('case_number', '')
-            court = meta.get('court', '')
-            date = meta.get('date', '')
-            path = f"{court} {case_number} {date}".strip()
-        else:
-            path = source
-
-        context += f"【{i+1}】[{type_label}] {path}\n{content}\n\n"
-
-    history_context = _history_to_prompt_text(history, max_messages=10)
-    prompt = f"""你是一名专业的法律顾问，采用IRAC法律分析方法回答问题。
-
-【IRAC分析框架】：
-- Issue（法律争点）：识别用户问题中的核心法律争议点
-- Rule（法律规则）：引用适用的法律条文和司法解释
-- Application（适用分析）：将法律规则与具体事实相结合，参考类似案例的裁判理由
-- Conclusion（结论）：参考裁判要旨，给出明确的法律意见和建议
-
-【对话历史】：
-{history_context}
-
-【法律依据】：
-{context}
-
-【咨询问题】：
-{query_text}
-
-【回答要求】：
-请严格按照IRAC框架回答：
-
-## 一、法律争点（Issue）
-明确指出用户问题中的核心法律争议点。
-
-## 二、法律规则（Rule）
-引用【法律依据】中的法律条文和司法解释：
-- 《法律名》第X条规定：...
-- 根据XX司法解释第X条：...
-
-## 三、适用分析（Application）
-将法律规则与用户的具体情况进行分析：
-- 事实认定：根据用户描述，认定关键事实
-- 法律适用分析：将法律规则应用于具体事实
-- 类案参考：引用【法律依据】中的类似案例，说明法院如何裁判
-- 有利/不利因素分析
-
-## 四、结论（Conclusion）
-- 参考裁判要旨，给出明确的法律意见
-- 具体建议
-- 风险提示
-
 【注意事项】：
 1. 如果用户在询问之前聊过的话题，请直接根据【对话历史】回答。
 2. 必须优先使用【法律依据】中的内容，不得编造法条。
@@ -343,31 +248,50 @@ def call_ollama_rag_stream(query_text, retrieved_docs, history, model_name):
 6. 保持专业、严谨的法律分析风格。
 """
 
+
+def call_ollama_rag(query_text, retrieved_docs, history, model_name, stream=False):
+    """调用 Ollama 进行 RAG 生成。stream=True 时逐 token yield 返回。"""
+    context = _build_rag_context(retrieved_docs)
+    history_context = _history_to_prompt_text(history, max_messages=10)
+    prompt = _build_rag_prompt(query_text, context, history_context)
+
+    print(f" 正在链接本地 大语言模型: {model_name}")
     url = "http://localhost:11434/api/generate"
     payload = {
         "model": model_name,
         "prompt": prompt,
-        "stream": True,
+        "stream": stream,
         "options": {
-            "num_ctx": 4096,
-            "temperature": 0.3
+            "num_ctx": 4096,   # kv限制，防止 1M 模型吞掉所有显存
+            "temperature": 0.3  # 法律咨询建议设低一点，更严谨
         }
     }
 
     try:
-        response = requests.post(url, json=payload, stream=True)
-        response.raise_for_status()
-        for line in response.iter_lines():
-            if not line:
-                continue
-            try:
-                chunk = json.loads(line)
-                token = chunk.get("response", "")
-                if token:
-                    yield token
-                if chunk.get("done", False):
-                    break
-            except json.JSONDecodeError:
-                continue
+        response = requests.post(url, json=payload, stream=stream)
+        if stream:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                    token = chunk.get("response", "")
+                    if token:
+                        yield token
+                    if chunk.get("done", False):
+                        break
+                except json.JSONDecodeError:
+                    continue
+        else:
+            return response.json().get("response", "模型响应出错")
     except Exception as e:
-        yield f"连接 Ollama 失败: {str(e)}"
+        if stream:
+            yield f"连接 Ollama 失败: {str(e)}"
+        else:
+            return f"连接 Ollama 失败: {str(e)}"
+
+
+def call_ollama_rag_stream(query_text, retrieved_docs, history, model_name):
+    """流式版本（向后兼容），等价于 call_ollama_rag(..., stream=True)。"""
+    yield from call_ollama_rag(query_text, retrieved_docs, history, model_name, stream=True)

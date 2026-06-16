@@ -31,3 +31,13 @@ class Config:
     # 案例数据路径
     CASE_DIR = str(DATA_DIR / "案例")
     CASE_JSON_DIR = str(DATA_DIR / "case_json")
+
+
+# 文档类型显示标签（RAG prompt 和前端 fallback 共用）
+DOC_TYPE_LABELS = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}
+
+# JWT 配置（auth.py 和 api_server.py 共用）
+JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "120"))
+GOOGLE_CLOCK_SKEW_SECONDS = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "60"))

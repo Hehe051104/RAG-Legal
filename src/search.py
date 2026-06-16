@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from pathlib import Path
 import numpy as np
 import torch
 from sentence_transformers import SentenceTransformer
@@ -117,6 +118,30 @@ def _cosine_similarity(query_emb, corpus_emb):
     return (corpus_norm @ query_norm.T).flatten()
 
 
+def _make_result(meta, content, method, score=None, doc_type=None):
+    """构建统一的检索结果 dict，消除 6 处重复构造。"""
+    result = {
+        "content": content,
+        "metadata": {
+            "source": meta["source"],
+            "article_number": meta["article_number"],
+            "doc_type": doc_type or meta.get("doc_type", "law"),
+            "case_number": meta.get("case_number", ""),
+            "court": meta.get("court", ""),
+            "date": meta.get("date", ""),
+        },
+        "method": method,
+    }
+    if score is not None:
+        result["score"] = score
+    return result
+
+
+def _dedup_key(meta):
+    """去重 key：source_article_number。"""
+    return f"{meta.get('source', '')}_{meta.get('article_number', '')}"
+
+
 def _vector_search(query_text, embeddings, documents, metadata, model, n_results, seen_keys, doc_type_filter=None, method_label="向量召回"):
     """向量语义搜索，可按doc_type过滤。
 
@@ -161,21 +186,9 @@ def _vector_search(query_text, embeddings, documents, metadata, model, n_results
         if doc_type_filter == "law_interp" and doc_type not in ("law", "interpretation"):
             continue
 
-        key = f"{meta['source']}_{meta['article_number']}"
+        key = _dedup_key(meta)
         if key not in seen_keys:
-            results.append({
-                "content": documents[idx],
-                "metadata": {
-                    "source": meta["source"],
-                    "article_number": meta["article_number"],
-                    "doc_type": doc_type,
-                    "case_number": meta.get("case_number", ""),
-                    "court": meta.get("court", ""),
-                    "date": meta.get("date", ""),
-                },
-                "method": method_label,
-                "score": float(scores[idx]),
-            })
+            results.append(_make_result(meta, documents[idx], method_label, score=float(scores[idx])))
             seen_keys.add(key)
             count += 1
 
@@ -196,20 +209,9 @@ def _tag_lookup(tags, metadata, documents, seen_keys):
             case_num = parsed['case_number']
             for i, meta in enumerate(metadata):
                 if meta.get('case_number') == case_num or meta.get('article_number') == case_num:
-                    key = f"{meta.get('source', '')}_{meta['article_number']}"
+                    key = _dedup_key(meta)
                     if key not in seen_keys:
-                        results.append({
-                            "content": documents[i],
-                            "metadata": {
-                                "source": meta["source"],
-                                "article_number": meta["article_number"],
-                                "doc_type": meta.get("doc_type", "law"),
-                                "case_number": meta.get("case_number", ""),
-                                "court": meta.get("court", ""),
-                                "date": meta.get("date", ""),
-                            },
-                            "method": "精准点名",
-                        })
+                        results.append(_make_result(meta, documents[i], "精准点名"))
                         seen_keys.add(key)
                         print(f" 精准命中案例：{meta.get('source', '')} {meta['article_number']}")
             continue
@@ -237,17 +239,9 @@ def _tag_lookup(tags, metadata, documents, seen_keys):
                     is_match = False
 
             if is_match:
-                key = f"{db_source}_{meta['article_number']}"
+                key = _dedup_key(meta)
                 if key not in seen_keys:
-                    results.append({
-                        "content": documents[i],
-                        "metadata": {
-                            "source": meta["source"],
-                            "article_number": meta["article_number"],
-                            "doc_type": meta.get("doc_type", "law"),
-                        },
-                        "method": "精准点名",
-                    })
+                    results.append(_make_result(meta, documents[i], "精准点名"))
                     seen_keys.add(key)
                     print(f" 精准命中：{db_source} {meta['article_number']}")
 
@@ -350,7 +344,6 @@ def _expand_relations(raw_docs, store, seen_keys, max_expand=3):
     如果命中了法律/解释，但没有案例，补充案例。
     如果命中了案例，但没有法律/解释，补充法律和解释。
     """
-    from pathlib import Path
     ref_path = Path(__file__).resolve().parent.parent / "data" / "reverse_references.json"
     if not ref_path.exists():
         return raw_docs
@@ -371,35 +364,20 @@ def _expand_relations(raw_docs, store, seen_keys, max_expand=3):
     if "case" not in doc_types:
         for doc in raw_docs:
             meta = doc["metadata"]
-            if meta.get("doc_type") in ("law", "interpretation"):
-                source = meta.get("source", "")
-                article = meta.get("article_number", "")
-                key = f"{source}|{article}"
+            if meta.get("doc_type") not in ("law", "interpretation"):
+                continue
 
-                case_numbers = law_to_cases.get(key, [])
-                if not case_numbers:
-                    case_numbers = interp_to_cases.get(key, [])
+            key = f"{meta.get('source', '')}|{meta.get('article_number', '')}"
+            case_numbers = law_to_cases.get(key, []) or interp_to_cases.get(key, [])
 
-                for case_num in case_numbers[:2]:
-                    for i, m in enumerate(metadata):
-                        if m.get("doc_type") == "case" and m.get("case_number") == case_num:
-                            case_key = f"{m.get('source', '')}_{m.get('article_number', '')}"
-                            if case_key not in seen_keys:
-                                expanded.append({
-                                    "content": documents[i],
-                                    "metadata": {
-                                        "source": m["source"],
-                                        "article_number": m["article_number"],
-                                        "doc_type": "case",
-                                        "case_number": m.get("case_number", ""),
-                                        "court": m.get("court", ""),
-                                        "date": m.get("date", ""),
-                                    },
-                                    "method": "关系扩展",
-                                })
-                                seen_keys.add(case_key)
-                                print(f" 关系扩展→案例：{case_num}")
-                                break
+            for case_num in case_numbers[:2]:
+                for i, m in enumerate(metadata):
+                    if m.get("doc_type") == "case" and m.get("case_number") == case_num:
+                        if _dedup_key(m) not in seen_keys:
+                            expanded.append(_make_result(m, documents[i], "关系扩展", doc_type="case"))
+                            seen_keys.add(_dedup_key(m))
+                            print(f" 关系扩展→案例：{case_num}")
+                            break
 
     # 案例 → 法律/解释
     if "law" not in doc_types and "interpretation" not in doc_types:
@@ -415,8 +393,9 @@ def _expand_relations(raw_docs, store, seen_keys, max_expand=3):
                 if meta.get("doc_type") != "case":
                     continue
 
+                # 查找 case_id
                 case_id = None
-                for i, m in enumerate(metadata):
+                for m in metadata:
                     if m.get("doc_type") == "case" and m.get("case_number") == meta.get("case_number"):
                         case_id = m.get("id")
                         break
@@ -424,49 +403,22 @@ def _expand_relations(raw_docs, store, seen_keys, max_expand=3):
                 if not case_id or case_id not in case_records:
                     continue
 
-                case_record = case_records[case_id]
-                relations = case_record.get("relations", {})
+                relations = case_records[case_id].get("relations", {})
 
-                # 补充法律
-                for ref in relations.get("laws", [])[:1]:
-                    law_name = ref.get("name", "")
-                    article = ref.get("article", "")
-                    for i, m in enumerate(metadata):
-                        if m.get("doc_type") == "law" and m.get("source") == law_name and m.get("article_number") == article:
-                            key = f"{m.get('source', '')}_{m.get('article_number', '')}"
-                            if key not in seen_keys:
-                                expanded.append({
-                                    "content": documents[i],
-                                    "metadata": {
-                                        "source": m["source"],
-                                        "article_number": m["article_number"],
-                                        "doc_type": "law",
-                                    },
-                                    "method": "关系扩展",
-                                })
-                                seen_keys.add(key)
-                                print(f" 关系扩展→法律：{law_name} {article}")
-                                break
-
-                # 补充解释
-                for ref in relations.get("interpretations", [])[:1]:
-                    interp_name = ref.get("name", "")
-                    article = ref.get("article", "")
-                    for i, m in enumerate(metadata):
-                        if m.get("doc_type") == "interpretation" and m.get("source") == interp_name and m.get("article_number") == article:
-                            key = f"{m.get('source', '')}_{m.get('article_number', '')}"
-                            if key not in seen_keys:
-                                expanded.append({
-                                    "content": documents[i],
-                                    "metadata": {
-                                        "source": m["source"],
-                                        "article_number": m["article_number"],
-                                        "doc_type": "interpretation",
-                                    },
-                                    "method": "关系扩展",
-                                })
-                                seen_keys.add(key)
-                                print(f" 关系扩展→解释：{interp_name} {article}")
+                # 补充法律和解释（统一处理，消除重复分支）
+                for ref_type, target_doc_type in [("laws", "law"), ("interpretations", "interpretation")]:
+                    for ref in relations.get(ref_type, [])[:1]:
+                        ref_name = ref.get("name", "")
+                        article = ref.get("article", "")
+                        for i, m in enumerate(metadata):
+                            if (m.get("doc_type") == target_doc_type
+                                    and m.get("source") == ref_name
+                                    and m.get("article_number") == article):
+                                if _dedup_key(m) not in seen_keys:
+                                    expanded.append(_make_result(m, documents[i], "关系扩展"))
+                                    seen_keys.add(_dedup_key(m))
+                                    label = "法律" if target_doc_type == "law" else "解释"
+                                    print(f" 关系扩展→{label}：{ref_name} {article}")
                                 break
 
     if expanded:
