@@ -105,25 +105,6 @@ def _normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-def extract_token_from_request(auth_header: str | None, cookies: dict[str, str]) -> str | None:
-    """从 Authorization header 或 Cookie 中提取 JWT Token。
-
-    供 api_server.py 和 routers/multimodal.py 共用，消除重复逻辑。
-    """
-    header = (auth_header or "").strip()
-    if header.lower().startswith("bearer "):
-        token = header[7:].strip()
-        if token:
-            return token
-
-    for cookie_name in ("legal_auth_token", "access_token", "token"):
-        token = (cookies.get(cookie_name) or "").strip()
-        if token:
-            return token
-
-    return None
-
-
 def _reset_code_key(email: str) -> str:
     return f"{RESET_CODE_CACHE_PREFIX}:{_normalize_email(email)}"
 

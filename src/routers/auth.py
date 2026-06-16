@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import User
-from config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES, GOOGLE_CLOCK_SKEW_SECONDS
 from utils import (
     EmailService,
     can_send_reset_code,
@@ -32,6 +31,10 @@ from utils import (
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "120"))
+GOOGLE_CLOCK_SKEW_SECONDS = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "60"))
 RESET_CODE_EXPIRE_MINUTES = int(os.getenv("RESET_CODE_EXPIRE_MINUTES", "5"))
 ADMIN_INVITE_CODE = os.getenv("ADMIN_INVITE_CODE", "").strip()
 ADMIN_EMAILS = {

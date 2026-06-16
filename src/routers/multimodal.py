@@ -13,7 +13,6 @@ from jose import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, Field
 
 from routers.auth import decode_access_token
-from utils import extract_token_from_request
 import asyncio
 import hashlib
 import re
@@ -142,6 +141,9 @@ def _extract_text_from_file(path: Path, ext: str) -> str:
         return f"文件已上传，但文本解析失败：{str(e)}"
 
 
+"""结束"""
+
+
 
 
 
@@ -154,19 +156,31 @@ router = APIRouter(prefix="/api", tags=["multimodal"])
 # ---------- 常量 ----------
 
 MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+ALLOWED_DOC_TYPES = {
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+}
 
 # ---------- 工具函数 ----------
 
 
 def _extract_token(request: Request) -> str:
-    """从请求中提取 JWT Token。"""
-    token = extract_token_from_request(
-        request.headers.get("Authorization"),
-        request.cookies,
-    )
-    if not token:
-        raise HTTPException(status_code=401, detail="未登录或 Token 已过期")
-    return token
+    """从请求中提取 JWT Token，复用 api_server.py 的同款逻辑。"""
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            return token
+
+    for cookie_name in ("legal_auth_token", "access_token", "token"):
+        token = (request.cookies.get(cookie_name) or "").strip()
+        if token:
+            return token
+
+    raise HTTPException(status_code=401, detail="未登录或 Token 已过期")
 
 
 def _verify_user(request: Request) -> dict[str, Any]:
@@ -379,4 +393,46 @@ async def synthesize_speech(request: Request, body: SynthesizeRequest):
             "cached": False,
         },
         msg="语音合成成功",
+    )
+
+
+@router.post("/speech/transcriptions", response_model=MultimodalResponse)
+async def transcribe_audio(request: Request, audio: UploadFile = File(...)):
+    """
+    音频转文本接口 (STT)
+
+    接受 multipart/form-data，字段名 "audio"。
+    支持常见音频格式（wav/mp3/m4a/webm）。
+    """
+    user = _verify_user(request)
+
+    # 基本校验
+    content_type = audio.content_type or ""
+    if not content_type.startswith("audio/") and content_type not in {
+        "application/octet-stream",
+        "video/webm",  # 浏览器 MediaRecorder 默认格式
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的音频类型: {content_type}。请上传 wav/mp3/m4a/webm 格式。",
+        )
+
+    audio_bytes = await audio.read()
+    if len(audio_bytes) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"音频大小超过限制（最大 {MAX_UPLOAD_SIZE_BYTES // 1024 // 1024}MB）",
+        )
+
+    # TODO: 接入真实 STT 服务（Whisper、Azure Speech、讯飞等）
+    # 当前返回 Mock 数据
+    print(f"🎤 [STT] 用户={user['id']} 音频大小={len(audio_bytes)}B 类型={content_type}")
+
+    return MultimodalResponse(
+        data={
+            "text": "（Mock）这是语音识别的占位文本，后续接入 Whisper 等 STT 服务后将返回真实转录结果。",
+            "duration_seconds": round(len(audio_bytes) / 32000, 1),  # 粗略估算
+            "language": "zh",
+        },
+        msg="语音转录成功（Mock）",
     )

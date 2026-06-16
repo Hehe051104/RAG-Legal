@@ -15,24 +15,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from jose import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, Field
-from typing import Any, List, Optional, Literal
+from typing import Any, List, Optional, Literal, cast
 import uvicorn
 import torch
 import requests
 
 # 导入咱们自己写的核心模块
-from config import Config, DOC_TYPE_LABELS, JWT_EXPIRE_MINUTES
+from config import Config
 from search import run_search
 from rerank import rerank_context
 from RAG import rewrite_query, call_ollama_rag
 from database import init_db
 from routers.auth import (
     AuthError,
+    JWT_EXPIRE_MINUTES,
     decode_access_token,
     router as auth_router,
 )
 from routers.multimodal import router as multimodal_router
-from utils import extract_token_from_request
 from fastapi.staticfiles import StaticFiles
 
 
@@ -139,10 +139,19 @@ app.include_router(multimodal_router)
 
 
 def _extract_token_from_request(request: Request) -> str | None:
-    return extract_token_from_request(
-        request.headers.get("Authorization"),
-        request.cookies,
-    )
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:].strip()
+        if token:
+            return token
+
+    cookie_names = ("legal_auth_token", "access_token", "token")
+    for cookie_name in cookie_names:
+        token = (request.cookies.get(cookie_name) or "").strip()
+        if token:
+            return token
+
+    return None
 
 
 def _build_user_profile_from_payload(token_payload: dict[str, object]) -> dict[str, str | None]:
@@ -404,7 +413,12 @@ class AuditResult(BaseModel):
 async def _call_maybe_async(func, *args, **kwargs):
     if inspect.iscoroutinefunction(func):
         return await func(*args, **kwargs)
-    return await asyncio.to_thread(func, *args, **kwargs)
+
+    result = await asyncio.to_thread(func, *args, **kwargs)
+    if inspect.iscoroutine(result):
+        return await result
+
+    return result
 
 
 def _safe_parse_audit_result(raw_text: str) -> AuditResult | None:
@@ -422,25 +436,53 @@ def _safe_parse_audit_result(raw_text: str) -> AuditResult | None:
     try:
         model_validate = getattr(AuditResult, "model_validate", None)
         if callable(model_validate):
-            return model_validate(payload)
+            return cast(AuditResult, model_validate(payload))
         return AuditResult.parse_obj(payload)
     except Exception:
         return None
 
 
 def _extract_first_json(text: str) -> str | None:
-    """从文本中提取第一个完整 JSON 对象。"""
     if not text:
         return None
+
     start = text.find("{")
     if start == -1:
         return None
-    try:
-        decoder = json.JSONDecoder()
-        obj, end = decoder.raw_decode(text, start)
-        return json.dumps(obj, ensure_ascii=False)
-    except (json.JSONDecodeError, ValueError):
-        return None
+
+    depth = 0
+    in_string = False
+    escape = False
+
+    for i in range(start, len(text)):
+        ch = text[i]
+        if in_string:
+            if escape:
+                escape = False
+                continue
+            if ch == "\\":
+                escape = True
+                continue
+            if ch == '"':
+                in_string = False
+            continue
+
+        if ch == '"':
+            in_string = True
+            continue
+
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+
+    return None
+
+
+def _default_clarify_answer() -> str:
+    return "您的问题描述较为模糊。为了准确匹配法律依据，请补充具体细节（如：纠纷起因、涉及的金额或具体的合同类型）。"
 
 
 def _build_fallback_answer(query: str, docs: list) -> str:
@@ -454,7 +496,7 @@ def _build_fallback_answer(query: str, docs: list) -> str:
         source = meta.get('source', '未知来源')
         article = meta.get('article_number', '')
         doc_type = meta.get('doc_type', 'law')
-        type_label = DOC_TYPE_LABELS.get(doc_type, "依据")
+        type_label = {"law": "法律条文", "interpretation": "司法解释", "case": "案例"}.get(doc_type, "依据")
         parts.append(f"**{i}. [{type_label}] 《{source}》{article}**\n{doc['content'][:200]}...\n")
 
     parts.append("\n⚠️ 本回答仅供参考，不构成正式法律意见。具体法律问题请咨询专业执业律师。")
@@ -496,17 +538,6 @@ def _build_irac_dict(audit: AuditResult) -> dict:
         "conclusion": audit.conclusion,
     }
 
-
-def _sse_response(answer: str, done_fields: dict) -> StreamingResponse:
-    """统一 SSE 流式响应包装器，消除重复的 delta/done/DONE 生成逻辑。"""
-    def gen():
-        chunk_size = 4
-        for i in range(0, len(answer), chunk_size):
-            yield f"data: {json.dumps({'type': 'delta', 'content': answer[i:i+chunk_size]}, ensure_ascii=False)}\n\n"
-        yield f"data: {json.dumps({'type': 'done', **done_fields}, ensure_ascii=False)}\n\n"
-        yield "[DONE]\n\n"
-    return StreamingResponse(gen(), media_type="text/event-stream")
-
 # ==========================================
 # 核心对话接口
 # ==========================================
@@ -538,7 +569,13 @@ async def chat_endpoint(req: ChatRequest):
             )
             payload = {"answer": answer, "references": [], "status": "success_chat"}
             if req.stream:
-                return _sse_response(answer, {"content": "", "references": [], "status": "success_chat"})
+                def chat_sse():
+                    chunk_size = 4
+                    for i in range(0, len(answer), chunk_size):
+                        yield f"data: {json.dumps({'type': 'delta', 'content': answer[i:i+chunk_size]}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'type': 'done', 'content': '', 'references': [], 'status': 'success_chat'}, ensure_ascii=False)}\n\n"
+                    yield "[DONE]\n\n"
+                return StreamingResponse(chat_sse(), media_type="text/event-stream")
             return payload
 
         # ==========================================
@@ -589,7 +626,13 @@ async def chat_endpoint(req: ChatRequest):
             )
             payload = {"answer": answer, "references": [], "status": "success_chat"}
             if req.stream:
-                return _sse_response(answer, {"content": "", "references": [], "status": "success_chat"})
+                def chat_sse2():
+                    chunk_size = 4
+                    for i in range(0, len(answer), chunk_size):
+                        yield f"data: {json.dumps({'type': 'delta', 'content': answer[i:i+chunk_size]}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'type': 'done', 'content': '', 'references': [], 'status': 'success_chat'}, ensure_ascii=False)}\n\n"
+                    yield "[DONE]\n\n"
+                return StreamingResponse(chat_sse2(), media_type="text/event-stream")
             return payload
 
         # 5. 有搜索结果 → IRAC 法律分析
@@ -612,7 +655,7 @@ async def chat_endpoint(req: ChatRequest):
                 )
             else:
                 # 法律/解释
-                type_label = DOC_TYPE_LABELS.get(doc_type, "法律依据")
+                type_label = "法律条文" if doc_type == "law" else "司法解释"
                 law_parts.append(
                     f"【{i+1}】[{type_label}] 《{source}》{article}\n{d['content']}"
                 )
@@ -740,10 +783,14 @@ async def chat_endpoint(req: ChatRequest):
         if audit.status == "need_clarify" or (model_is_asking and query_is_vague and top_score < 0.0):
             print(f"🔍 综合判定：满足澄清条件 (标签: {audit.status}, 提问极短: {query_is_vague}, 得分: {top_score:.2f})")
 
-            clarify_answer = combined_answer if len(combined_answer) < 300 else "您的问题描述较为模糊。为了准确匹配法律依据，请补充具体细节（如：纠纷起因、涉及的金额或具体的合同类型）。"
+            clarify_answer = combined_answer if len(combined_answer) < 300 else _default_clarify_answer()
 
             if req.stream:
-                return _sse_response(clarify_answer, {"references": [], "status": "need_clarify"})
+                def clarify_sse():
+                    yield f"data: {json.dumps({'type': 'delta', 'content': clarify_answer}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'type': 'done', 'references': [], 'status': 'need_clarify'}, ensure_ascii=False)}\n\n"
+                    yield "[DONE]\n\n"
+                return StreamingResponse(clarify_sse(), media_type="text/event-stream")
             return {"answer": clarify_answer, "references": [], "status": "need_clarify"}
 
         # 分支三：判定"不合格" (重写)
@@ -791,12 +838,26 @@ async def chat_endpoint(req: ChatRequest):
 
         # SSE 流式响应
         if req.stream:
-            return _sse_response(combined_answer, {
-                "references": formatted_references,
-                "irac": irac_data,
-                "status": "success",
-                "metadata": response_payload['metadata'],
-            })
+            def sse_generator():
+                # 逐字符发送 answer 内容
+                chunk_size = 4
+                for i in range(0, len(combined_answer), chunk_size):
+                    chunk = combined_answer[i:i + chunk_size]
+                    yield f"data: {json.dumps({'type': 'delta', 'content': chunk}, ensure_ascii=False)}\n\n"
+
+                # 最后发送完整的 references, irac 和 metadata
+                yield f"data: {json.dumps({'type': 'done', 'references': formatted_references, 'irac': irac_data, 'status': 'success', 'metadata': response_payload['metadata']}, ensure_ascii=False)}\n\n"
+                yield "[DONE]\n\n"
+
+            return StreamingResponse(
+                sse_generator(),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                    "X-Accel-Buffering": "no",
+                },
+            )
 
         # 标准 JSON 响应
         return response_payload

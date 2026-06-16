@@ -66,8 +66,7 @@
       "Bash(ls data/vector_store/)",
       "Bash(ls data/*.json)",
       "Bash(grep -E \"\\\\.\\(npy|bin|pt|safetensors|onnx\\)$\")",
-      "Bash(grep -E \"\\\\.\\(db|env|bak\\)$|\\\\.env/\")",
-      "Bash(pnpm store *)"
+      "Bash(grep -E \"\\\\.\\(db|env|bak\\)$|\\\\.env/\")"
     ]
   }
 }
