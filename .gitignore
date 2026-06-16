@@ -7,6 +7,7 @@
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
 
 # Node.js
 node_modules/
@@ -14,22 +15,48 @@ node_modules/
 dist/
 package-lock.json
 
+# pnpm store (全局缓存，5GB+)
+.pnpm-store/
+
 # Database
 data/legal_vector_db/
 app.db
 *.db.bak
 
+# 向量数据库与嵌入模型文件
+data/vector_store/
+data/vector_data.json
+data/all_records.json
+
+# 法律原始文档 (.docx，太大不适合上传)
+data/法律原文/
+data/司法解释/
+data/案例/
+
+# TTS 模型文件
+CharacterModels/
+GenieData/
+
+# 参考项目
+chatbot-main/
+ORC图像文字识别/
+
+# 用户上传文件
+uploads/
+
 # IDE
 .idea/
 .vscode/
+*.swp
+*.swo
 
 # Build artifacts
 next-app/.next/
 
-# Runtime files
+# Runtime / 进度文件
 scrape_progress.json
 fetch_progress.json
 
-# 忽略数据文件夹中的特定文件
-data/vector_store/embeddings.npy
-data/all_records.json
+# OS
+.DS_Store
+Thumbs.db

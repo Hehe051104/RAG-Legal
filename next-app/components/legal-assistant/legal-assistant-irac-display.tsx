@@ -6,6 +6,20 @@ import { MessageResponse } from "@/components/ai-elements/message";
 import { cn } from "@/lib/utils";
 import type { IracSections } from "./api";
 
+/** 将文本转为可分段的 Markdown */
+function normalizeText(text: string): string {
+  let t = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  t = t
+    .replace(/(。)(?=[^\n])/g, "$1\n\n")
+    .replace(/(！)(?=[^\n])/g, "$1\n\n")
+    .replace(/(？)(?=[^\n])/g, "$1\n\n")
+    .replace(/(；)(?=[^\n])/g, "$1\n\n");
+  t = t.replace(/([^\n])(##\s)/g, "$1\n\n$2");
+  t = t.replace(/([^\n])([一二三四五六七八九十]+、)/g, "$1\n\n$2");
+  t = t.replace(/\n{3,}/g, "\n\n");
+  return t.trim();
+}
+
 const IRAC_STAGES = [
   {
     key: "issue",
@@ -121,7 +135,7 @@ export function IracDisplay({ irac, className }: IracDisplayProps) {
               <div className="px-3 pb-3 pt-1 border-t border-border/20">
                 <div className="text-[14px] leading-[1.8] text-foreground/85">
                   <MessageResponse className="prose prose-sm max-w-none prose-p:my-2.5 prose-p:leading-[1.8] prose-p:text-[14px] prose-ul:my-1.5 prose-li:my-0.5 prose-li:leading-[1.65] prose-strong:font-semibold dark:prose-invert">
-                    {content}
+                    {normalizeText(content)}
                   </MessageResponse>
                 </div>
               </div>

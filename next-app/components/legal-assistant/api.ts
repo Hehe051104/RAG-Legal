@@ -452,16 +452,17 @@ export function buildAssistantFetchInit(options: {
 // ==========================================
 
 export type UploadResult = {
+  file_id?: string;
   url: string;
   filename: string;
+  stored_name?: string;
   size: number;
   content_type: string;
-};
-
-export type TranscriptionResult = {
-  text: string;
-  duration_seconds: number;
-  language: string;
+  kind?: "image" | "document";
+  text?: string;
+  text_preview?: string;
+  text_length?: number;
+  can_analyze?: boolean;
 };
 
 export type SynthesizeResult = {
@@ -472,14 +473,19 @@ export type SynthesizeResult = {
 
 export async function uploadFile(
   file: File,
-  token: string,
+  token?: string,
 ): Promise<UploadResult> {
   const formData = new FormData();
   formData.append("file", file);
 
+  const headers: HeadersInit = {};
+  if (token?.trim()) {
+    headers.Authorization = `Bearer ${token.trim()}`;
+  }
+
   const response = await fetch(getApiUrl("/api/upload"), {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
     credentials: "include",
     body: formData,
   });
@@ -489,30 +495,12 @@ export async function uploadFile(
     throw new Error(msg);
   }
 
-  const json = (await response.json()) as { status: string; data: UploadResult };
-  return json.data;
-}
+  const json = (await response.json()) as { status: string; data: UploadResult; msg?: string };
 
-export async function transcribeAudio(
-  audioBlob: Blob,
-  token: string,
-): Promise<TranscriptionResult> {
-  const formData = new FormData();
-  formData.append("audio", audioBlob, "recording.webm");
-
-  const response = await fetch(getApiUrl("/api/speech/transcriptions"), {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    credentials: "include",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const msg = await fetchAssistantErrorMessage(response);
-    throw new Error(msg);
+  if (json.status !== "success") {
+    throw new Error(json.msg || "文件上传失败");
   }
 
-  const json = (await response.json()) as { status: string; data: TranscriptionResult };
   return json.data;
 }
 
@@ -537,4 +525,67 @@ export async function synthesizeSpeech(
 
   const json = (await response.json()) as { status: string; data: SynthesizeResult };
   return json.data;
+}
+
+// ==========================================
+// 法律辅助查询
+// ==========================================
+
+export function isLegalQuery(query: string): boolean {
+  const legalKeywords = [
+    "法律", "律师", "法院", "法官", "诉讼", "起诉", "被告", "原告",
+    "犯罪", "违法", "合法", "判刑", "坐牢", "罚款", "赔偿",
+    "合同", "协议", "违约", "侵权", "责任", "权利", "义务",
+    "离婚", "结婚", "遗产", "继承", "抚养", "赡养",
+    "劳动", "工伤", "辞退", "裁员", "加班", "工资",
+    "交通", "事故", "醉驾", "酒驾", "逃逸",
+    "公安", "警察", "逮捕", "拘留", "保释",
+    "诈骗", "盗窃", "抢劫", "故意伤害", "杀人",
+    "房产", "租赁", "买卖", "产权",
+    "知识产权", "专利", "商标", "版权",
+    "刑法", "民法", "宪法", "行政法", "劳动法",
+  ];
+
+  const queryLower = query.toLowerCase();
+  return legalKeywords.some((keyword) => queryLower.includes(keyword));
+}
+
+export async function getLegalAdvice(
+  query: string,
+  token: string,
+  context?: string,
+): Promise<{ answer: string; references?: string[] }> {
+  const response = await fetch(getApiUrl("/api/chat"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      query,
+      context: context || "",
+      top_n: 5,
+      n_results: 15,
+      threshold: -2,
+      force_search: true,
+      stream: false,
+    }),
+  });
+
+  if (!response.ok) {
+    const msg = await fetchAssistantErrorMessage(response);
+    throw new Error(msg);
+  }
+
+  const data = (await response.json()) as {
+    status: string;
+    answer?: string;
+    references?: string[];
+  };
+
+  return {
+    answer: data.answer || "暂无相关法律信息。",
+    references: data.references,
+  };
 }

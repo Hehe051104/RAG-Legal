@@ -4,6 +4,10 @@ from datetime import datetime, timedelta, timezone
 import inspect
 import json
 import os
+import subprocess
+import sys
+import time
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -11,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from jose import ExpiredSignatureError, JWTError
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from typing import Any, List, Optional, Literal, cast
 import uvicorn
 import torch
 import requests
@@ -29,6 +33,7 @@ from routers.auth import (
     router as auth_router,
 )
 from routers.multimodal import router as multimodal_router
+from fastapi.staticfiles import StaticFiles
 
 
 ONLINE_TTL_SECONDS = int(os.getenv("ONLINE_TTL_SECONDS", "75"))
@@ -57,11 +62,12 @@ def _normalize_validation_field(loc: tuple[object, ...] | list[object] | None) -
     return ".".join(parts) if parts else "参数"
 
 
-def _translate_validation_error(error: dict[str, object]) -> str:
+def _translate_validation_error(error: dict[str, Any]) -> str:
     error_type = str(error.get("type") or "")
     loc = error.get("loc")
     field_name = _normalize_validation_field(loc if isinstance(loc, (tuple, list)) else None)
-    ctx = error.get("ctx") if isinstance(error.get("ctx"), dict) else {}
+    ctx_raw = error.get("ctx")
+    ctx: dict[str, Any] = ctx_raw if isinstance(ctx_raw, dict) else {}
 
     if error_type == "string_too_short":
         min_length = int(ctx.get("min_length") or 0)
@@ -87,7 +93,30 @@ def _translate_validation_error(error: dict[str, object]) -> str:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await init_db()
+
+    # 自动启动 genie TTS 服务器（可选依赖，失败不影响主服务）
+    genie_proc = None
+    genie_script = Path(__file__).resolve().parent / "api_voice_genie.py"
+    if genie_script.exists():
+        try:
+            genie_proc = subprocess.Popen(
+                [sys.executable, str(genie_script), "--server-only"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            time.sleep(2)  # 给 genie 一点启动时间
+            print("✅ genie TTS 服务器已自动启动 (127.0.0.1:9900)")
+        except Exception as e:
+            print(f"⚠️ genie TTS 自动启动失败: {e}")
+    else:
+        print("ℹ️ 未找到 api_voice_genie.py，跳过 TTS 服务")
+
     yield
+
+    if genie_proc and genie_proc.poll() is None:
+        print("🛑 正在关闭 genie TTS 服务器...")
+        genie_proc.terminate()
+        genie_proc.wait(timeout=5)
 
 # 初始化 FastAPI 应用
 app = FastAPI(
@@ -100,6 +129,9 @@ app = FastAPI(
         {"url": "http://127.0.0.1:8000", "description": "本地开发环境"}
     ]
 )
+UPLOAD_ROOT = os.getenv("UPLOAD_ROOT", "uploads")
+os.makedirs(UPLOAD_ROOT, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_ROOT), name="uploads")
 
 app.include_router(auth_router)
 app.include_router(multimodal_router)
@@ -322,6 +354,32 @@ async def handle_unknown_exception(_request: Request, exc: Exception):
     )
 
 # ==========================================
+# 非法律关键词 / 法律关键词（模块级，避免每次请求重建）
+# ==========================================
+_NON_LEGAL_PATTERNS = [
+    "你好", "您好", "嗨", "哈喽", "hello", "hi", "hey", "早上好", "下午好", "晚上好",
+    "早安", "晚安", "在吗", "在不在", "你是谁", "你叫什么", "你是什么",
+    "今天天气", "天气怎么样", "吃了吗", "吃饭了吗", "无聊", "开心", "难过",
+    "谢谢", "感谢", "辛苦了", "再见", "拜拜", "好的", "知道了", "明白",
+    "代码", "编程", "python", "java", "javascript", "bug", "程序", "算法",
+    "数据库", "服务器", "前端", "后端", "接口", "api", "html", "css",
+    "数学", "计算", "物理", "化学", "生物", "公式", "方程",
+    "翻译", "写一篇", "帮我写", "作文", "论文", "总结一下",
+    "电影", "音乐", "游戏", "小说", "电视剧", "综艺",
+    "怎么做饭", "菜谱", "旅游", "减肥", "健身", "护肤",
+    "人工智能", "机器学习", "深度学习", "chatgpt", "大模型", "神经网络",
+    "讲个笑话", "讲个故事", "猜谜语", "成语接龙",
+]
+
+_LEGAL_KEYWORDS = [
+    "法", "罪", "刑", "诉", "判", "赔偿", "合同", "纠纷", "侵权", "离婚",
+    "遗产", "继承", "劳动", "工伤", "交通", "事故", "诈骗", "盗窃", "故意",
+    "违法", "合法", "权利", "义务", "律师", "法院", "公安", "仲裁",
+    "起诉", "上诉", "申诉", "执行", "查封", "拘留", "逮捕", "缓刑",
+    "杀人", "打人", "伤人", "抢劫", "贩毒", "贪污", "受贿",
+]
+
+# ==========================================
 # 定义前端传过来的数据格式 (数据校验层)
 # ==========================================
 class HistoryMessage(BaseModel):
@@ -378,7 +436,7 @@ def _safe_parse_audit_result(raw_text: str) -> AuditResult | None:
     try:
         model_validate = getattr(AuditResult, "model_validate", None)
         if callable(model_validate):
-            return model_validate(payload)
+            return cast(AuditResult, model_validate(payload))
         return AuditResult.parse_obj(payload)
     except Exception:
         return None
@@ -493,41 +551,10 @@ async def chat_endpoint(req: ChatRequest):
         # ==========================================
         # 0. 非法律问题关键词匹配（匹配到则直接走普通对话，跳过搜索）
         # ==========================================
-        _NON_LEGAL_PATTERNS = [
-            # 打招呼
-            "你好", "您好", "嗨", "哈喽", "hello", "hi", "hey", "早上好", "下午好", "晚上好",
-            "早安", "晚安", "在吗", "在不在", "你是谁", "你叫什么", "你是什么",
-            # 闲聊
-            "今天天气", "天气怎么样", "吃了吗", "吃饭了吗", "无聊", "开心", "难过",
-            "谢谢", "感谢", "辛苦了", "再见", "拜拜", "好的", "知道了", "明白",
-            # 技术/编程
-            "代码", "编程", "python", "java", "javascript", "bug", "程序", "算法",
-            "数据库", "服务器", "前端", "后端", "接口", "api", "html", "css",
-            # 数学/科学
-            "数学", "计算", "物理", "化学", "生物", "公式", "方程",
-            # 翻译/写作
-            "翻译", "写一篇", "帮我写", "作文", "论文", "总结一下",
-            # 娱乐
-            "电影", "音乐", "游戏", "小说", "电视剧", "综艺",
-            # 生活
-            "怎么做饭", "菜谱", "旅游", "减肥", "健身", "护肤",
-            # AI相关
-            "人工智能", "机器学习", "深度学习", "chatgpt", "大模型", "神经网络",
-            # 故意测试
-            "讲个笑话", "讲个故事", "猜谜语", "成语接龙",
-        ]
-
         query_lower = req.query.strip().lower()
         is_non_legal = any(pattern in query_lower for pattern in _NON_LEGAL_PATTERNS)
 
         # 短问题（<=4个字）且不包含法律关键词 → 大概率是非法律问题
-        _LEGAL_KEYWORDS = [
-            "法", "罪", "刑", "诉", "判", "赔偿", "合同", "纠纷", "侵权", "离婚",
-            "遗产", "继承", "劳动", "工伤", "交通", "事故", "诈骗", "盗窃", "故意",
-            "违法", "合法", "权利", "义务", "律师", "法院", "公安", "仲裁",
-            "起诉", "上诉", "申诉", "执行", "查封", "拘留", "逮捕", "缓刑",
-            "杀人", "打人", "伤人", "抢劫", "贩毒", "贪污", "受贿",
-        ]
         has_legal_keyword = any(kw in query_lower for kw in _LEGAL_KEYWORDS)
 
         if is_non_legal and not has_legal_keyword:

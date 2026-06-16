@@ -114,5 +114,5 @@ Copy `.env.example` → `.env`. Key vars: SMTP credentials, Google OAuth, `ADMIN
 - `data/legal_vector_db/` contains pre-built ChromaDB
 - `src/config.py` defines `PROJECT_ROOT` and `DATA_DIR` for all path references
 - All scripts in `scripts/` add `src/` to sys.path before importing
-- Use `D:\anaconda\envs\drl\python.exe` for Python with torch/chromadb
+- Use `C:\Users\liu\.conda\envs\RAG-Legal\python.exe` for Python with torch/chromadb
 - Set `HF_ENDPOINT=https://hf-mirror.com` for HuggingFace model downloads

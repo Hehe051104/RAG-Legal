@@ -240,7 +240,7 @@ function removeConversationFromFolders(
 }
 
 function buildConversationTitle(source: string): string {
-  return source.trim().slice(0, 28) || DEFAULT_CONVERSATION_TITLE;
+  return source.trim().slice(0, 5) || DEFAULT_CONVERSATION_TITLE;
 }
 
 function reducer(state: HomeState, action: Action): HomeState {

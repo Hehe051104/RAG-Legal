@@ -9,6 +9,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { SparklesIcon } from "@/components/chat/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getApiUrl } from "@/lib/api-url";
 import { LegalReferenceCard } from "./legal-reference-card";
 import { synthesizeSpeech } from "./api";
 import type { IracSections, LegalReference } from "./api";
@@ -187,14 +188,18 @@ export function LegalAssistantMessageBubble({
     setIsSpeaking(true);
     try {
       const result = await synthesizeSpeech(content.slice(0, 2000), authToken);
-      // TODO: 当后端返回真实音频 URL 后，用 Audio API 播放
-      // const audio = new Audio(result.audio_url);
-      // await audio.play();
-      toast.success(`语音合成成功（${result.text_length} 字）`);
+      const fullUrl = getApiUrl(result.audio_url);
+      const audio = new Audio(fullUrl);
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        toast.error("语音播放失败");
+      };
+      await audio.play();
+      toast.success(`语音播报中（${result.text_length} 字）`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "语音合成失败");
-    } finally {
       setIsSpeaking(false);
+      toast.error(err instanceof Error ? err.message : "语音合成失败");
     }
   }, [content, authToken, isSpeaking]);
 
@@ -251,8 +256,9 @@ export function LegalAssistantMessageBubble({
             </div>
           ) : (
             <div className={cn("text-[14px] leading-[1.75]", isError ? "text-destructive" : "text-foreground")}>
-              {/* 有 irac 结构化数据时，只显示 IracDisplay，不重复显示 content */}
-              {content && !irac ? (
+              {/* 过滤掉 JSON 原文（流式阶段 irac 未到达时 content 可能包含 JSON） */}
+              {/* 有 irac 结构化数据时，只显示 IracDisplay */}
+              {content && !irac && !content.trim().startsWith('{"') ? (
                 <MessageResponse className="prose prose-sm max-w-none prose-p:my-2.5 prose-p:leading-[1.8] prose-p:text-[14px] prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-li:leading-[1.65] prose-pre:my-2 prose-headings:mb-2 prose-headings:mt-5 prose-headings:font-semibold prose-strong:font-semibold prose-hr:my-4 dark:prose-invert">
                   {normalizeMarkdown(content)}
                 </MessageResponse>

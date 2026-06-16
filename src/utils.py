@@ -395,7 +395,7 @@ def _send_email_blocking(
         if not use_ssl and use_tls:
             server.starttls(context=ssl.create_default_context())
         server.login(smtp_user, smtp_password)
-        server.sendmail(smtp_from, [to_email], msg.as_string())
+        server.sendmail(str(smtp_from), [to_email], msg.as_string())
 
 
 async def send_email(

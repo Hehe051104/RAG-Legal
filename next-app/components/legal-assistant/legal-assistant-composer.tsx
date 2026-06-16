@@ -6,6 +6,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useHome } from "./home-context";
+import { uploadFile } from "./api";
 import { LegalAssistantComposerInput } from "./legal-assistant-composer-input";
 import {
   type SlashCommand,
@@ -20,7 +21,7 @@ type PendingFile = {
 export function LegalAssistantComposer() {
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
-  const { isSending, sendMessage, deleteConversation, selectedConversationId, clearAll } = useHome();
+  const { isSending, sendMessage, deleteConversation, selectedConversationId, clearAll, authToken } = useHome();
   const [input, setInput] = useState("");
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashQuery, setSlashQuery] = useState("");
@@ -28,10 +29,11 @@ export function LegalAssistantComposer() {
 
   // 文件上传状态
   const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasText = useMemo(() => input.trim().length > 0, [input]);
-  const canSubmit = (hasText || pendingFile !== null) && !isSending;
+  const canSubmit = (hasText || pendingFile !== null) && !isSending && !isUploading;
 
   // --- 文件上传 ---
 
@@ -163,21 +165,58 @@ export function LegalAssistantComposer() {
 
     setSlashOpen(false);
 
-    // TODO: 如果有 pendingFile，先调用 handleUpload 获取文件 URL，附加到消息中
-    if (pendingFile) {
-      // 当前直接忽略文件，仅发送文本
-      // 后续接入 upload API 后，将文件 URL 附加到消息体
-      toast.info(`文件 "${pendingFile.file.name}" 已选择，上传功能开发中`);
-      if (pendingFile.previewUrl) {
-        URL.revokeObjectURL(pendingFile.previewUrl);
-      }
-      setPendingFile(null);
-    }
+    void (async () => {
+      let messageText = input.trim();
 
-    if (hasText) {
-      void sendMessage(input);
-      setInput("");
-    }
+      try {
+        if (pendingFile) {
+          setIsUploading(true);
+
+          const uploaded = await uploadFile(pendingFile.file, authToken);
+
+          if (uploaded.kind === "document" && uploaded.text?.trim()) {
+            messageText = messageText || "请分析这个文件的主要内容。";
+            messageText = [
+              messageText,
+              "",
+              `【上传文件：${uploaded.filename}】`,
+              uploaded.text,
+            ].join("\n");
+          } else if (uploaded.kind === "image") {
+            messageText = messageText || "请分析这张图片。";
+            const parts = [
+              messageText,
+              "",
+              `【已上传图片：${uploaded.filename}】`,
+            ];
+            if (uploaded.text?.trim()) {
+              parts.push(`图片文字内容：${uploaded.text}`);
+            }
+            parts.push(`文件地址：${uploaded.url}`);
+            messageText = parts.join("\n");
+          } else {
+            messageText = messageText || `我上传了文件：${uploaded.filename}`;
+          }
+
+          toast.success(`文件 "${uploaded.filename}" 上传成功`);
+
+          if (pendingFile.previewUrl) {
+            URL.revokeObjectURL(pendingFile.previewUrl);
+          }
+          setPendingFile(null);
+        }
+
+        if (messageText.trim()) {
+          void sendMessage(messageText);
+          setInput("");
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "文件上传失败";
+        toast.error(message);
+      } finally {
+        setIsUploading(false);
+      }
+    })();
   }, [canSubmit, pendingFile, hasText, input, sendMessage]);
 
   return (

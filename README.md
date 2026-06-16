@@ -20,22 +20,39 @@
 
 ## 1. 环境准备
 
-### 1.1 安装依赖
+### 1.1 Python 环境
+
+使用 conda 环境 `RAG-Legal`（Python 3.13），激活后所有命令自动使用正确解释器：
+
+```powershell
+conda activate RAG-Legal
+```
+
+### 1.2 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
+
 ## 2. 安装与启动模型
 
 1. 安装 Ollama。
-2. 在 cmd 中运行以下命令拉取并启动模型：
+2. 拉取并启动模型：
 
 ```bash
 ollama run Lusizo/qwen2.5-7b-instruct-1m
 ```
 
-3. 打开项目并运行 api_server.py，启动后端咨询服务。
+3. 启动后端（推荐用项目脚本，自动锁定正确环境）：
+
+```powershell
+.\run_api.ps1
+```
+
+genie TTS 语音合成服务自动随 API 启动（监听 127.0.0.1:9900）。
+
+调试：VS Code 按 `F5` 选择「启动 API 服务器」。
 
 ## 3. 法律数据扩充
 
@@ -55,9 +72,10 @@ ollama run Lusizo/qwen2.5-7b-instruct-1m
 
 ```bash
 需要node-js环境，请自己安装
+npm install -g pnpm      # 全局安装 pnpm
 cd next-app
-npm install -g pnpm（要装pnpm，指令不对让ai改）
-pnpm dev 
+pnpm install              # 安装前端依赖
+pnpm dev                  # 启动开发服务器
 ```
 
 启动后访问：http://localhost:3000
@@ -70,7 +88,48 @@ pnpm dev
 - Auth.js（认证）
 - Drizzle ORM
 
-## 5. 认证接口联调
+### 语音播报
+
+AI 回复气泡右上角有喇叭图标，点击即可语音播报。后端使用 genie_tts 引擎（ONNX 模型），默认发音人 nina（中文女声），生成 WAV 音频后通过浏览器原生 Audio API 播放。
+
+**TTS 缓存**：相同文本 + 相同发音人只合成一次，之后命中缓存直接返回（`cached: true`），缓存文件位于 `uploads/audio/`。
+
+## 5. 多模态功能（TTS / 语音 / 文件上传）
+
+### 5.1 配置
+
+服务自动随 `api_server.py` 启动（监听 127.0.0.1:9900），启动时自动加载默认角色 nina。
+
+默认发音人 nina（中文），可选 feibi。通过环境变量 `TTS_DEFAULT_CHARACTER` 可修改默认角色。
+
+所需模型文件（放置于项目根目录）：
+- `CharacterModels/` — 发音人 ONNX 模型（v2ProPlus/nina、feibi）
+- `GenieData/` — G2P / hubert / speaker encoder
+
+TTS 依赖见 `requirements.txt` 中「TTS 语音合成」段。
+
+### 5.2 调用示例
+
+```bash
+curl -X POST "http://127.0.0.1:8000/speech/synthesize" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"text": "根据《民法典》第一千零四十六条，结婚应当男女双方完全自愿。", "character": "nina"}'
+```
+
+返回（首次合成 `cached: false`，再次请求同一文本 `cached: true`）：
+```json
+{
+  "status": "success",
+  "data": { "audio_url": "/uploads/audio/abc123_nina.wav", "format": "wav", "character": "nina", "cached": false },
+  "msg": "语音合成成功"
+}
+```
+
+若 genie 服务器未启动则返回 503。
+
+
+## 6. 认证接口联调
 
 Python 认证接口现在统一返回：
 
@@ -84,11 +143,17 @@ Python 认证接口现在统一返回：
 
 Swagger 示例可直接打开后端 `/docs` 查看，接口包括：
 
+**认证接口：**
 - `POST /api/auth/send-code`
 - `POST /api/auth/register`
 - `POST /api/auth/reset-password`
 - `POST /api/auth/login`
 - `POST /api/auth/token/verify`
+
+**多模态接口：**
+- `POST /speech/synthesize` — 文本转语音（TTS），默认发音人 nina
+- `POST /speech/transcriptions` — 语音转文本（STT）
+- `POST /api/upload` — 文件上传
 
 前端调用封装已放在 `next-app/lib/api/auth.ts`，可以直接在 Next.js 中导入使用。
 

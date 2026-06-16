@@ -59,7 +59,14 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(awk '{print $2}')",
       "Bash(awk '{print $5}')",
-      "Bash(taskkill //PID 105552 //F)"
+      "Bash(taskkill //PID 105552 //F)",
+      "Bash(D:/anaconda3/envs/rag/python.exe -c ' *)",
+      "Bash(D:/anaconda3/envs/rag/python.exe *)",
+      "Bash(du -sh data/legal_vector_db/)",
+      "Bash(ls data/vector_store/)",
+      "Bash(ls data/*.json)",
+      "Bash(grep -E \"\\\\.\\(npy|bin|pt|safetensors|onnx\\)$\")",
+      "Bash(grep -E \"\\\\.\\(db|env|bak\\)$|\\\\.env/\")"
     ]
   }
 }

@@ -67,19 +67,21 @@ export function LegalAssistantSidebarFolders({
         ) : (
           groupedFolders.map((folder) => (
             <div
-              className="space-y-1.5 rounded-lg border border-sidebar-border/60 bg-sidebar-accent/20 p-2"
+              className="space-y-1 rounded-lg border border-sidebar-border/60 bg-sidebar-accent/20 p-2"
               key={folder.id}
             >
-              <div className="group/folder flex items-center gap-2 px-1">
-                <FolderIcon className="size-4 text-sidebar-foreground/60" />
+              <div className="flex h-9 items-center gap-2 px-1">
+                <FolderIcon className="size-4 shrink-0 text-sidebar-foreground/60" />
                 <button
                   className="min-w-0 flex-1 text-left"
                   onClick={() => onFolderEdit(folder.id)}
                   type="button"
                 >
-                  <div className="truncate text-[13px] font-medium leading-5">{folder.name}</div>
-                  <div className="text-[11px] text-sidebar-foreground/55 leading-5">
-                    {folder.conversationIds.length} 个会话
+                  <div className="truncate text-[13px] font-medium leading-snug">
+                    {folder.name}
+                    <span className="ml-1.5 text-[10px] font-normal text-muted-foreground/60">
+                      {folder.conversationIds.length}
+                    </span>
                   </div>
                 </button>
 

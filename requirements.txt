@@ -1,6 +1,6 @@
 # ============================================
 # 法律智能助手 - Python 依赖清单
-# 基于 rag conda 环境验证通过的版本
+# 基于 RAG-Legal conda 环境验证通过的版本
 # ============================================
 
 # --- 核心 ML / 向量检索 ---
@@ -26,7 +26,8 @@ sqlalchemy==2.0.48
 aiosqlite==0.22.1
 
 # --- 认证 / 安全 ---
-passlib[bcrypt]==1.7.4
+passlib[argon2,bcrypt]==1.7.4
+argon2-cffi==25.1.0
 python-jose[cryptography]==3.5.0
 google-auth==2.47.0
 pyasn1==0.6.3
@@ -34,6 +35,23 @@ pyasn1-modules==0.4.2
 
 # --- 文档处理 ---
 python-docx==1.2.0
+lxml==6.1.1
+pytesseract>=0.3.10
 
 # --- HTTP ---
 requests==2.33.1
+httpx==0.28.1
+python-dotenv==1.2.2
+
+# --- TTS 语音合成 ---
+genie-tts==2.0.2
+onnx==1.21.0
+onnxruntime==1.26.0
+g2pM==0.1.2.5
+jieba_fast==0.53
+nltk==3.9.4
+pyopenjtalk-plus==0.4.1.post8
+pypinyin==0.55.0
+sounddevice==0.5.5
+soundfile==0.14.0
+soxr==1.1.0
